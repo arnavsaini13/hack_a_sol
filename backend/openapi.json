@@ -1,0 +1,1890 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Agricultural Policy, Loan & Subsidy Transparency Platform",
+    "description": "Statutory rule-based transparency platform for paddy farmers, bank officers, and policymakers in Chhattisgarh.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/auth/send-otp": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Api Send Otp",
+        "description": "Initiate login by sending 6-digit OTP (fixed demo OTP: 123456).",
+        "operationId": "api_send_otp_api_auth_send_otp_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendOTPRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/verify-otp": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Api Verify Otp",
+        "description": "Verify submitted OTP and establish secure session.",
+        "operationId": "api_verify_otp_api_auth_verify_otp_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyOTPRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/verify-pin": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Api Verify Pin",
+        "description": "Authenticate with 4-digit PIN for repeat logins on the same device.",
+        "operationId": "api_verify_pin_api_auth_verify_pin_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyPINRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/session": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Api Get Session",
+        "description": "Check current active session status.",
+        "operationId": "api_get_session_api_auth_session_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/consent": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Api Record Consent",
+        "description": "Record farmer informed consent or revocation.",
+        "operationId": "api_record_consent_api_auth_consent_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Api Logout",
+        "description": "End session and clear session cookie.",
+        "operationId": "api_logout_api_auth_logout_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/farmer/snapshot": {
+      "get": {
+        "tags": [
+          "Farmer"
+        ],
+        "summary": "Get Snapshot",
+        "description": "Fetch unified registry snapshot: parcels, loans, procurements, insurance.",
+        "operationId": "get_snapshot_api_farmer_snapshot_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FarmerSnapshotResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/farmer/discrepancies": {
+      "get": {
+        "tags": [
+          "Farmer"
+        ],
+        "summary": "Get Discrepancies",
+        "description": "Compute entitlements vs actual received records.\nProduces 4-part explanation cards with locked bilingual templates.",
+        "operationId": "get_discrepancies_api_farmer_discrepancies_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscrepanciesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/farmer/explain-rejection": {
+      "post": {
+        "tags": [
+          "Farmer"
+        ],
+        "summary": "Explain Rejection",
+        "description": "Evaluate a farmer-selected rejection reason chip against statutory rules.",
+        "operationId": "explain_rejection_api_farmer_explain_rejection_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OutsideRejectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutsideRejectionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/farmer/cases": {
+      "get": {
+        "tags": [
+          "Farmer"
+        ],
+        "summary": "List Cases",
+        "description": "List all grievance cases for the logged-in farmer.",
+        "operationId": "list_cases_api_farmer_cases_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CaseSchema"
+                  },
+                  "type": "array",
+                  "title": "Response List Cases Api Farmer Cases Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Farmer"
+        ],
+        "summary": "Create Case",
+        "description": "Create a new grievance case with tamper-evident audit hash.",
+        "operationId": "create_case_api_farmer_cases_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/farmer/cases/{case_id}/letter": {
+      "get": {
+        "tags": [
+          "Farmer"
+        ],
+        "summary": "Download Letter",
+        "description": "Generate locked grievance representation document in Hindi or English.",
+        "operationId": "download_letter_api_farmer_cases__case_id__letter_get",
+        "parameters": [
+          {
+            "name": "case_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Case Id"
+            }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "hi",
+              "title": "Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bank/queue": {
+      "get": {
+        "tags": [
+          "Bank"
+        ],
+        "summary": "Get Verification Queue",
+        "description": "Fetch loan applications for the bank officer verification console.",
+        "operationId": "get_verification_queue_api_bank_queue_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BankQueueItem"
+                  },
+                  "type": "array",
+                  "title": "Response Get Verification Queue Api Bank Queue Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bank/verify": {
+      "post": {
+        "tags": [
+          "Bank"
+        ],
+        "summary": "Verify Application",
+        "description": "Record bank officer verification verdict to hash-chained audit log.",
+        "operationId": "verify_application_api_bank_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BankVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankVerifyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/policy/bottlenecks": {
+      "get": {
+        "tags": [
+          "Policy"
+        ],
+        "summary": "Get Bottlenecks",
+        "description": "Fetch aggregated bottleneck metrics across Chhattisgarh districts.\nEnforces Hard Rule: small cells (< 5) are suppressed for privacy.",
+        "operationId": "get_bottlenecks_api_policy_bottlenecks_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyDashboardResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/policy/audit-log": {
+      "get": {
+        "tags": [
+          "Policy"
+        ],
+        "summary": "Get Audit Log",
+        "description": "Fetch immutable hash-chained audit log and return verification verdict.",
+        "operationId": "get_audit_log_api_policy_audit_log_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rules": {
+      "get": {
+        "tags": [
+          "Rules"
+        ],
+        "summary": "Get Rules",
+        "description": "Return all statutory rules with provenance metadata and verification status.",
+        "operationId": "get_rules_api_rules_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RulesListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Root",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BankQueueItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "applicant_name": {
+            "type": "string",
+            "title": "Applicant Name"
+          },
+          "applicant_father": {
+            "type": "string",
+            "title": "Applicant Father"
+          },
+          "applicant_mobile": {
+            "type": "string",
+            "title": "Applicant Mobile"
+          },
+          "parcel_id": {
+            "type": "string",
+            "title": "Parcel Id"
+          },
+          "village": {
+            "type": "string",
+            "title": "Village"
+          },
+          "khasra_no": {
+            "type": "string",
+            "title": "Khasra No"
+          },
+          "area_acres": {
+            "type": "string",
+            "title": "Area Acres"
+          },
+          "lender_name": {
+            "type": "string",
+            "title": "Lender Name"
+          },
+          "loan_type": {
+            "type": "string",
+            "title": "Loan Type"
+          },
+          "requested_paise": {
+            "type": "integer",
+            "title": "Requested Paise"
+          },
+          "requested_display": {
+            "type": "string",
+            "title": "Requested Display"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "match_score": {
+            "type": "number",
+            "title": "Match Score"
+          },
+          "match_band": {
+            "type": "string",
+            "title": "Match Band"
+          },
+          "match_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Match Reasons"
+          },
+          "mortgage_status": {
+            "type": "string",
+            "title": "Mortgage Status"
+          },
+          "is_duplicate_kcc": {
+            "type": "boolean",
+            "title": "Is Duplicate Kcc"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "applicant_name",
+          "applicant_father",
+          "applicant_mobile",
+          "parcel_id",
+          "village",
+          "khasra_no",
+          "area_acres",
+          "lender_name",
+          "loan_type",
+          "requested_paise",
+          "requested_display",
+          "status",
+          "match_score",
+          "match_band",
+          "match_reasons",
+          "mortgage_status",
+          "is_duplicate_kcc"
+        ],
+        "title": "BankQueueItem"
+      },
+      "BankVerifyRequest": {
+        "properties": {
+          "application_id": {
+            "type": "string",
+            "title": "Application Id"
+          },
+          "decision": {
+            "type": "string",
+            "title": "Decision"
+          },
+          "officer_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Officer Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "application_id",
+          "decision"
+        ],
+        "title": "BankVerifyRequest"
+      },
+      "BankVerifyResponse": {
+        "properties": {
+          "application_id": {
+            "type": "string",
+            "title": "Application Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "receipt_hash": {
+            "type": "string",
+            "title": "Receipt Hash"
+          },
+          "recorded_at": {
+            "type": "string",
+            "title": "Recorded At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "application_id",
+          "status",
+          "receipt_hash",
+          "recorded_at"
+        ],
+        "title": "BankVerifyResponse"
+      },
+      "CaseSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "case_ref_no": {
+            "type": "string",
+            "title": "Case Ref No"
+          },
+          "farmer_id": {
+            "type": "string",
+            "title": "Farmer Id"
+          },
+          "parcel_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parcel Id"
+          },
+          "authority_name": {
+            "type": "string",
+            "title": "Authority Name"
+          },
+          "authority_designation": {
+            "type": "string",
+            "title": "Authority Designation"
+          },
+          "scheme_id": {
+            "type": "string",
+            "title": "Scheme Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "entitled_paise": {
+            "type": "integer",
+            "title": "Entitled Paise"
+          },
+          "entitled_display": {
+            "type": "string",
+            "title": "Entitled Display"
+          },
+          "actual_paise": {
+            "type": "integer",
+            "title": "Actual Paise"
+          },
+          "actual_display": {
+            "type": "string",
+            "title": "Actual Display"
+          },
+          "gap_paise": {
+            "type": "integer",
+            "title": "Gap Paise"
+          },
+          "gap_display": {
+            "type": "string",
+            "title": "Gap Display"
+          },
+          "details": {
+            "type": "string",
+            "title": "Details"
+          },
+          "verification_hash": {
+            "type": "string",
+            "title": "Verification Hash"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "case_ref_no",
+          "farmer_id",
+          "authority_name",
+          "authority_designation",
+          "scheme_id",
+          "status",
+          "entitled_paise",
+          "entitled_display",
+          "actual_paise",
+          "actual_display",
+          "gap_paise",
+          "gap_display",
+          "details",
+          "verification_hash",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "CaseSchema"
+      },
+      "ConsentRequest": {
+        "properties": {
+          "consent_given": {
+            "type": "boolean",
+            "title": "Consent Given",
+            "default": true
+          },
+          "purpose": {
+            "type": "string",
+            "title": "Purpose",
+            "default": "Agricultural Entitlement & Subsidy Verification"
+          }
+        },
+        "type": "object",
+        "title": "ConsentRequest"
+      },
+      "CreateCaseRequest": {
+        "properties": {
+          "parcel_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parcel Id"
+          },
+          "authority_name": {
+            "type": "string",
+            "title": "Authority Name"
+          },
+          "authority_designation": {
+            "type": "string",
+            "title": "Authority Designation"
+          },
+          "scheme_id": {
+            "type": "string",
+            "title": "Scheme Id"
+          },
+          "entitled_paise": {
+            "type": "integer",
+            "title": "Entitled Paise"
+          },
+          "actual_paise": {
+            "type": "integer",
+            "title": "Actual Paise"
+          },
+          "gap_paise": {
+            "type": "integer",
+            "title": "Gap Paise"
+          },
+          "details": {
+            "type": "string",
+            "title": "Details"
+          }
+        },
+        "type": "object",
+        "required": [
+          "authority_name",
+          "authority_designation",
+          "scheme_id",
+          "entitled_paise",
+          "actual_paise",
+          "gap_paise",
+          "details"
+        ],
+        "title": "CreateCaseRequest"
+      },
+      "DiscrepanciesResponse": {
+        "properties": {
+          "discrepancies": {
+            "items": {
+              "$ref": "#/components/schemas/DiscrepancyItem"
+            },
+            "type": "array",
+            "title": "Discrepancies"
+          },
+          "total_gap_paise": {
+            "type": "integer",
+            "title": "Total Gap Paise"
+          },
+          "total_gap_display": {
+            "type": "string",
+            "title": "Total Gap Display"
+          },
+          "provenance": {
+            "type": "string",
+            "title": "Provenance",
+            "default": "Synthetic Demo Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "discrepancies",
+          "total_gap_paise",
+          "total_gap_display"
+        ],
+        "title": "DiscrepanciesResponse"
+      },
+      "DiscrepancyItem": {
+        "properties": {
+          "scheme_id": {
+            "type": "string",
+            "title": "Scheme Id"
+          },
+          "scheme_name_hi": {
+            "type": "string",
+            "title": "Scheme Name Hi"
+          },
+          "scheme_name_en": {
+            "type": "string",
+            "title": "Scheme Name En"
+          },
+          "parcel_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parcel Id"
+          },
+          "entitled_paise": {
+            "type": "integer",
+            "title": "Entitled Paise"
+          },
+          "entitled_display": {
+            "type": "string",
+            "title": "Entitled Display"
+          },
+          "received_paise": {
+            "type": "integer",
+            "title": "Received Paise"
+          },
+          "received_display": {
+            "type": "string",
+            "title": "Received Display"
+          },
+          "gap_paise": {
+            "type": "integer",
+            "title": "Gap Paise"
+          },
+          "gap_display": {
+            "type": "string",
+            "title": "Gap Display"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "days_overdue": {
+            "type": "integer",
+            "title": "Days Overdue",
+            "default": 0
+          },
+          "alert_flag": {
+            "type": "boolean",
+            "title": "Alert Flag",
+            "default": false
+          },
+          "next_action": {
+            "type": "string",
+            "title": "Next Action"
+          },
+          "explanation_hi": {
+            "type": "string",
+            "title": "Explanation Hi"
+          },
+          "explanation_en": {
+            "type": "string",
+            "title": "Explanation En"
+          },
+          "speech_text_hi": {
+            "type": "string",
+            "title": "Speech Text Hi"
+          },
+          "speech_text_en": {
+            "type": "string",
+            "title": "Speech Text En"
+          },
+          "rule_id": {
+            "type": "string",
+            "title": "Rule Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scheme_id",
+          "scheme_name_hi",
+          "scheme_name_en",
+          "entitled_paise",
+          "entitled_display",
+          "received_paise",
+          "received_display",
+          "gap_paise",
+          "gap_display",
+          "status",
+          "next_action",
+          "explanation_hi",
+          "explanation_en",
+          "speech_text_hi",
+          "speech_text_en",
+          "rule_id"
+        ],
+        "title": "DiscrepancyItem"
+      },
+      "FarmerProfile": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "mobile": {
+            "type": "string",
+            "title": "Mobile"
+          },
+          "masked_mobile": {
+            "type": "string",
+            "title": "Masked Mobile"
+          },
+          "name_hi": {
+            "type": "string",
+            "title": "Name Hi"
+          },
+          "name_en": {
+            "type": "string",
+            "title": "Name En"
+          },
+          "father_name_hi": {
+            "type": "string",
+            "title": "Father Name Hi"
+          },
+          "father_name_en": {
+            "type": "string",
+            "title": "Father Name En"
+          },
+          "village": {
+            "type": "string",
+            "title": "Village"
+          },
+          "tehsil": {
+            "type": "string",
+            "title": "Tehsil"
+          },
+          "district": {
+            "type": "string",
+            "title": "District"
+          },
+          "consent_given": {
+            "type": "boolean",
+            "title": "Consent Given"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "mobile",
+          "masked_mobile",
+          "name_hi",
+          "name_en",
+          "father_name_hi",
+          "father_name_en",
+          "village",
+          "tehsil",
+          "district",
+          "consent_given"
+        ],
+        "title": "FarmerProfile"
+      },
+      "FarmerSnapshotResponse": {
+        "properties": {
+          "farmer": {
+            "$ref": "#/components/schemas/FarmerProfile"
+          },
+          "parcels": {
+            "items": {
+              "$ref": "#/components/schemas/LandParcelSchema"
+            },
+            "type": "array",
+            "title": "Parcels"
+          },
+          "total_area_ha": {
+            "type": "string",
+            "title": "Total Area Ha"
+          },
+          "total_area_acres": {
+            "type": "string",
+            "title": "Total Area Acres"
+          },
+          "loans": {
+            "items": {
+              "$ref": "#/components/schemas/LoanSchema"
+            },
+            "type": "array",
+            "title": "Loans"
+          },
+          "procurements": {
+            "items": {
+              "$ref": "#/components/schemas/ProcurementSchema"
+            },
+            "type": "array",
+            "title": "Procurements"
+          },
+          "insurance_units": {
+            "items": {
+              "$ref": "#/components/schemas/InsuranceUnitSchema"
+            },
+            "type": "array",
+            "title": "Insurance Units"
+          },
+          "provenance": {
+            "type": "string",
+            "title": "Provenance",
+            "default": "Synthetic Demo Data"
+          },
+          "rules_last_verified": {
+            "type": "string",
+            "title": "Rules Last Verified",
+            "default": "2026-03-01"
+          }
+        },
+        "type": "object",
+        "required": [
+          "farmer",
+          "parcels",
+          "total_area_ha",
+          "total_area_acres",
+          "loans",
+          "procurements",
+          "insurance_units"
+        ],
+        "title": "FarmerSnapshotResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "InsuranceUnitSchema": {
+        "properties": {
+          "unit_id": {
+            "type": "string",
+            "title": "Unit Id"
+          },
+          "village_code": {
+            "type": "string",
+            "title": "Village Code"
+          },
+          "parcel_id": {
+            "type": "string",
+            "title": "Parcel Id"
+          },
+          "crop": {
+            "type": "string",
+            "title": "Crop"
+          },
+          "season": {
+            "type": "string",
+            "title": "Season"
+          },
+          "sum_insured_per_ha_paise": {
+            "type": "integer",
+            "title": "Sum Insured Per Ha Paise"
+          },
+          "average_yield_kg": {
+            "type": "string",
+            "title": "Average Yield Kg"
+          },
+          "indemnity_level": {
+            "type": "string",
+            "title": "Indemnity Level"
+          },
+          "cce_yield_kg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cce Yield Kg"
+          },
+          "cutoff_date": {
+            "type": "string",
+            "title": "Cutoff Date"
+          },
+          "insured_ha": {
+            "type": "string",
+            "title": "Insured Ha"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unit_id",
+          "village_code",
+          "parcel_id",
+          "crop",
+          "season",
+          "sum_insured_per_ha_paise",
+          "average_yield_kg",
+          "indemnity_level",
+          "cutoff_date",
+          "insured_ha"
+        ],
+        "title": "InsuranceUnitSchema"
+      },
+      "LandParcelSchema": {
+        "properties": {
+          "parcel_id": {
+            "type": "string",
+            "title": "Parcel Id"
+          },
+          "district": {
+            "type": "string",
+            "title": "District"
+          },
+          "tehsil": {
+            "type": "string",
+            "title": "Tehsil"
+          },
+          "village": {
+            "type": "string",
+            "title": "Village"
+          },
+          "khasra_no": {
+            "type": "string",
+            "title": "Khasra No"
+          },
+          "area_ha": {
+            "type": "string",
+            "title": "Area Ha"
+          },
+          "area_acres": {
+            "type": "string",
+            "title": "Area Acres"
+          },
+          "girdawari_crop": {
+            "type": "string",
+            "title": "Girdawari Crop"
+          },
+          "girdawari_ha": {
+            "type": "string",
+            "title": "Girdawari Ha"
+          },
+          "mortgage_status": {
+            "type": "string",
+            "title": "Mortgage Status"
+          },
+          "mortgage_bank": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mortgage Bank"
+          }
+        },
+        "type": "object",
+        "required": [
+          "parcel_id",
+          "district",
+          "tehsil",
+          "village",
+          "khasra_no",
+          "area_ha",
+          "area_acres",
+          "girdawari_crop",
+          "girdawari_ha",
+          "mortgage_status"
+        ],
+        "title": "LandParcelSchema"
+      },
+      "LoanSchema": {
+        "properties": {
+          "loan_id": {
+            "type": "string",
+            "title": "Loan Id"
+          },
+          "parcel_id": {
+            "type": "string",
+            "title": "Parcel Id"
+          },
+          "lender_type": {
+            "type": "string",
+            "title": "Lender Type"
+          },
+          "bank_name": {
+            "type": "string",
+            "title": "Bank Name"
+          },
+          "principal_paise": {
+            "type": "integer",
+            "title": "Principal Paise"
+          },
+          "principal_display": {
+            "type": "string",
+            "title": "Principal Display"
+          },
+          "interest_charged_paise": {
+            "type": "integer",
+            "title": "Interest Charged Paise"
+          },
+          "interest_charged_display": {
+            "type": "string",
+            "title": "Interest Charged Display"
+          },
+          "disbursement_date": {
+            "type": "string",
+            "title": "Disbursement Date"
+          },
+          "due_date": {
+            "type": "string",
+            "title": "Due Date"
+          },
+          "actual_repayment_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Repayment Date"
+          },
+          "is_repaid_timely": {
+            "type": "boolean",
+            "title": "Is Repaid Timely"
+          },
+          "is_kcc": {
+            "type": "boolean",
+            "title": "Is Kcc"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "is_subsidised": {
+            "type": "boolean",
+            "title": "Is Subsidised"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loan_id",
+          "parcel_id",
+          "lender_type",
+          "bank_name",
+          "principal_paise",
+          "principal_display",
+          "interest_charged_paise",
+          "interest_charged_display",
+          "disbursement_date",
+          "due_date",
+          "is_repaid_timely",
+          "is_kcc",
+          "is_active",
+          "is_subsidised"
+        ],
+        "title": "LoanSchema"
+      },
+      "LoginResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "farmer": {
+            "$ref": "#/components/schemas/FarmerProfile"
+          },
+          "session_token": {
+            "type": "string",
+            "title": "Session Token"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role",
+            "default": "farmer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message",
+          "farmer",
+          "session_token"
+        ],
+        "title": "LoginResponse"
+      },
+      "OutsideRejectionRequest": {
+        "properties": {
+          "reason_chip": {
+            "type": "string",
+            "title": "Reason Chip"
+          },
+          "paddy_acres": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paddy Acres"
+          },
+          "quantity_offered_quintals": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity Offered Quintals"
+          },
+          "moisture_pct": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Moisture Pct"
+          },
+          "loan_principal_paise": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Loan Principal Paise"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason_chip"
+        ],
+        "title": "OutsideRejectionRequest"
+      },
+      "OutsideRejectionResponse": {
+        "properties": {
+          "verdict": {
+            "type": "string",
+            "title": "Verdict"
+          },
+          "explanation_hi": {
+            "type": "string",
+            "title": "Explanation Hi"
+          },
+          "explanation_en": {
+            "type": "string",
+            "title": "Explanation En"
+          },
+          "speech_text_hi": {
+            "type": "string",
+            "title": "Speech Text Hi"
+          },
+          "speech_text_en": {
+            "type": "string",
+            "title": "Speech Text En"
+          },
+          "suggested_action": {
+            "type": "string",
+            "title": "Suggested Action"
+          }
+        },
+        "type": "object",
+        "required": [
+          "verdict",
+          "explanation_hi",
+          "explanation_en",
+          "speech_text_hi",
+          "speech_text_en",
+          "suggested_action"
+        ],
+        "title": "OutsideRejectionResponse"
+      },
+      "PolicyBottleneckItem": {
+        "properties": {
+          "district": {
+            "type": "string",
+            "title": "District"
+          },
+          "tehsil": {
+            "type": "string",
+            "title": "Tehsil"
+          },
+          "scheme": {
+            "type": "string",
+            "title": "Scheme"
+          },
+          "stage": {
+            "type": "string",
+            "title": "Stage"
+          },
+          "affected_count_display": {
+            "type": "string",
+            "title": "Affected Count Display"
+          },
+          "is_suppressed": {
+            "type": "boolean",
+            "title": "Is Suppressed"
+          },
+          "total_delayed_paise_display": {
+            "type": "string",
+            "title": "Total Delayed Paise Display"
+          },
+          "average_delay_days": {
+            "type": "integer",
+            "title": "Average Delay Days"
+          }
+        },
+        "type": "object",
+        "required": [
+          "district",
+          "tehsil",
+          "scheme",
+          "stage",
+          "affected_count_display",
+          "is_suppressed",
+          "total_delayed_paise_display",
+          "average_delay_days"
+        ],
+        "title": "PolicyBottleneckItem"
+      },
+      "PolicyDashboardResponse": {
+        "properties": {
+          "bottlenecks": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyBottleneckItem"
+            },
+            "type": "array",
+            "title": "Bottlenecks"
+          },
+          "total_delayed_farmers_display": {
+            "type": "string",
+            "title": "Total Delayed Farmers Display"
+          },
+          "total_state_delayed_amount_display": {
+            "type": "string",
+            "title": "Total State Delayed Amount Display"
+          },
+          "rules_last_verified": {
+            "type": "string",
+            "title": "Rules Last Verified",
+            "default": "2026-03-01"
+          },
+          "provenance": {
+            "type": "string",
+            "title": "Provenance",
+            "default": "Synthetic Demo Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bottlenecks",
+          "total_delayed_farmers_display",
+          "total_state_delayed_amount_display"
+        ],
+        "title": "PolicyDashboardResponse"
+      },
+      "ProcurementSchema": {
+        "properties": {
+          "procurement_id": {
+            "type": "string",
+            "title": "Procurement Id"
+          },
+          "parcel_id": {
+            "type": "string",
+            "title": "Parcel Id"
+          },
+          "crop": {
+            "type": "string",
+            "title": "Crop"
+          },
+          "quantity_quintals": {
+            "type": "string",
+            "title": "Quantity Quintals"
+          },
+          "moisture_pct": {
+            "type": "string",
+            "title": "Moisture Pct"
+          },
+          "grade": {
+            "type": "string",
+            "title": "Grade"
+          },
+          "msp_paid_paise": {
+            "type": "integer",
+            "title": "Msp Paid Paise"
+          },
+          "msp_paid_display": {
+            "type": "string",
+            "title": "Msp Paid Display"
+          },
+          "kuy_paid_paise": {
+            "type": "integer",
+            "title": "Kuy Paid Paise"
+          },
+          "kuy_paid_display": {
+            "type": "string",
+            "title": "Kuy Paid Display"
+          },
+          "kuy_expected_release_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kuy Expected Release Date"
+          },
+          "procurement_date": {
+            "type": "string",
+            "title": "Procurement Date"
+          },
+          "mandi_receipt_no": {
+            "type": "string",
+            "title": "Mandi Receipt No"
+          }
+        },
+        "type": "object",
+        "required": [
+          "procurement_id",
+          "parcel_id",
+          "crop",
+          "quantity_quintals",
+          "moisture_pct",
+          "grade",
+          "msp_paid_paise",
+          "msp_paid_display",
+          "kuy_paid_paise",
+          "kuy_paid_display",
+          "procurement_date",
+          "mandi_receipt_no"
+        ],
+        "title": "ProcurementSchema"
+      },
+      "RuleItemSchema": {
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "title": "Rule Id"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "value": {
+            "title": "Value"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "effective_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effective Date"
+          },
+          "last_verified": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Verified"
+          },
+          "verified": {
+            "type": "boolean",
+            "title": "Verified"
+          },
+          "provenance_badge": {
+            "type": "string",
+            "title": "Provenance Badge",
+            "default": "Pending verification"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rule_id",
+          "description",
+          "value",
+          "unit",
+          "verified"
+        ],
+        "title": "RuleItemSchema"
+      },
+      "RulesListResponse": {
+        "properties": {
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/RuleItemSchema"
+            },
+            "type": "array",
+            "title": "Rules"
+          },
+          "meta": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Meta"
+          },
+          "trust_bar": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Trust Bar"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rules",
+          "meta",
+          "trust_bar"
+        ],
+        "title": "RulesListResponse"
+      },
+      "SendOTPRequest": {
+        "properties": {
+          "mobile": {
+            "type": "string",
+            "pattern": "^[6-9]\\d{9}$",
+            "title": "Mobile",
+            "description": "10-digit Indian mobile number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mobile"
+        ],
+        "title": "SendOTPRequest"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VerifyOTPRequest": {
+        "properties": {
+          "mobile": {
+            "type": "string",
+            "pattern": "^[6-9]\\d{9}$",
+            "title": "Mobile"
+          },
+          "otp": {
+            "type": "string",
+            "maxLength": 6,
+            "minLength": 6,
+            "title": "Otp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mobile",
+          "otp"
+        ],
+        "title": "VerifyOTPRequest"
+      },
+      "VerifyPINRequest": {
+        "properties": {
+          "mobile": {
+            "type": "string",
+            "pattern": "^[6-9]\\d{9}$",
+            "title": "Mobile"
+          },
+          "pin": {
+            "type": "string",
+            "maxLength": 4,
+            "minLength": 4,
+            "title": "Pin"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mobile",
+          "pin"
+        ],
+        "title": "VerifyPINRequest"
+      }
+    }
+  }
+}

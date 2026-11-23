@@ -1,0 +1,363 @@
+{
+  "meta": {
+    "version": "2026-v4",
+    "rules_last_reviewed": "2026-11-23",
+    "disclaimer": "All values must be verified against primary government sources before production use."
+  },
+  "rules": [
+    {
+      "rule_id": "MSP_PADDY_COMMON",
+      "description": "Minimum Support Price for Common paddy per quintal",
+      "value": 244100,
+      "unit": "paise_per_quintal",
+      "source_url": "https://farmer.gov.in/mspstatements.aspx",
+      "effective_date": "2025-10-01",
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "MSP_PADDY_GRADE_A",
+      "description": "Minimum Support Price for Grade A paddy per quintal",
+      "value": 246100,
+      "unit": "paise_per_quintal",
+      "source_url": "https://farmer.gov.in/mspstatements.aspx",
+      "effective_date": "2025-10-01",
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "KUY_BONUS",
+      "description": "Krishak Unnati Yojana bonus per quintal (Chhattisgarh state)",
+      "value": 65900,
+      "unit": "paise_per_quintal",
+      "source_url": "https://kisan.cg.nic.in",
+      "effective_date": "2025-10-01",
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "PADDY_QTY_CAP_PER_ACRE",
+      "description": "Maximum paddy quantity eligible for MSP procurement per acre",
+      "value": 21,
+      "unit": "quintals_per_acre",
+      "source_url": "https://kisan.cg.nic.in",
+      "effective_date": "2025-10-01",
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "MOISTURE_THRESHOLD",
+      "description": "Maximum moisture percentage for full MSP procurement",
+      "value": 17,
+      "unit": "percent",
+      "source_url": "https://fci.gov.in",
+      "effective_date": "2025-10-01",
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "PACS_INTEREST_RATE_TIMELY",
+      "description": "Interest rate for PACS/cooperative loans when repaid on time",
+      "value": 0,
+      "unit": "percent",
+      "source_url": "https://www.rbi.org.in",
+      "effective_date": "2025-04-01",
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "RRB_BASE_RATE",
+      "description": "Base interest rate for RRB/commercial KCC loans",
+      "value": 7,
+      "unit": "percent",
+      "source_url": "https://www.rbi.org.in",
+      "effective_date": "2025-04-01",
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "RRB_SUBVENTION",
+      "description": "Interest subvention for timely repayment on RRB/commercial KCC",
+      "value": 3,
+      "unit": "percent",
+      "source_url": "https://www.rbi.org.in",
+      "effective_date": "2025-04-01",
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "OPERATIONAL_LOAN_CAP",
+      "description": "Current operational KCC loan cap",
+      "value": 30000000,
+      "unit": "paise",
+      "source_url": "https://www.rbi.org.in",
+      "effective_date": "2025-04-01",
+      "last_verified": "2026-11-23",
+      "verified": false,
+      "note": "Announced increase to ₹5,00,000 pending notification"
+    },
+    {
+      "rule_id": "ANNOUNCED_LOAN_CAP",
+      "description": "Announced (but not yet effective) KCC loan cap",
+      "value": 50000000,
+      "unit": "paise",
+      "source_url": "https://www.rbi.org.in",
+      "effective_date": null,
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "COLLATERAL_FREE_LIMIT",
+      "description": "Maximum loan amount without collateral",
+      "value": 20000000,
+      "unit": "paise",
+      "source_url": "https://www.rbi.org.in",
+      "effective_date": "2025-04-01",
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "PMFBY_PREMIUM_KHARIF",
+      "description": "Maximum farmer premium for Kharif crops under PMFBY",
+      "value": 2,
+      "unit": "percent",
+      "source_url": "https://pmfby.gov.in",
+      "effective_date": "2025-04-01",
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "PMFBY_PREMIUM_RABI",
+      "description": "Maximum farmer premium for Rabi crops under PMFBY",
+      "value": 1.5,
+      "unit": "percent",
+      "source_url": "https://pmfby.gov.in",
+      "effective_date": "2025-04-01",
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "PMFBY_PREMIUM_COMMERCIAL",
+      "description": "Maximum farmer premium for commercial/horticulture crops under PMFBY",
+      "value": 5,
+      "unit": "percent",
+      "source_url": "https://pmfby.gov.in",
+      "effective_date": "2025-04-01",
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "PMFBY_INDEMNITY_LEVEL",
+      "description": "Indemnity level for PMFBY threshold yield calculation",
+      "value": 90,
+      "unit": "percent",
+      "source_url": "https://pmfby.gov.in",
+      "effective_date": "2025-04-01",
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "PMFBY_SETTLEMENT_DAYS",
+      "description": "Settlement period for PMFBY claims from CCE cutoff date",
+      "value": 60,
+      "unit": "days",
+      "source_url": "https://pmfby.gov.in",
+      "effective_date": "2025-04-01",
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "LOCALIZED_CALAMITY_HOURS",
+      "description": "Hours within which a localized calamity must be reported",
+      "value": 72,
+      "unit": "hours",
+      "source_url": "https://pmfby.gov.in",
+      "effective_date": "2025-04-01",
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "BANK_ESCALATION_DAYS",
+      "description": "Days to wait before escalating to RBI Integrated Ombudsman",
+      "value": 30,
+      "unit": "days",
+      "source_url": "https://cms.rbi.org.in",
+      "effective_date": "2025-04-01",
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "PROCUREMENT_FOLLOWUP_DAYS",
+      "description": "Days after which a user reminder for procurement follow-up is suggested (not statutory)",
+      "value": 15,
+      "unit": "days",
+      "source_url": null,
+      "effective_date": null,
+      "last_verified": "2026-11-23",
+      "verified": false,
+      "note": "User reminder, not a statutory deadline"
+    },
+    {
+      "rule_id": "SCALE_OF_FINANCE_PER_ACRE",
+      "description": "Scale of finance per acre for over-financing calculation",
+      "value": 5000000,
+      "unit": "paise_per_acre",
+      "source_url": null,
+      "effective_date": "2025-04-01",
+      "last_verified": "2026-11-23",
+      "verified": false,
+      "note": "Assumed value; verify against district-level DLTC norms"
+    },
+    {
+      "rule_id": "HA_TO_ACRES",
+      "description": "Conversion factor from hectares to acres",
+      "value": 2.47105,
+      "unit": "acres_per_hectare",
+      "source_url": null,
+      "effective_date": null,
+      "last_verified": "2026-11-23",
+      "verified": true
+    },
+    {
+      "rule_id": "MSP_CAP_PER_FARMER",
+      "description": "Whether the paddy MSP quantity cap is per farmer (true) or per parcel (false)",
+      "value": true,
+      "unit": "boolean",
+      "source_url": "https://kisan.cg.nic.in",
+      "effective_date": "2025-10-01",
+      "last_verified": "2026-11-23",
+      "verified": false,
+      "note": "Confirm in the official order whether the cap is per farmer or per parcel"
+    },
+    {
+      "rule_id": "ROUNDING_TOLERANCE_PAISE",
+      "description": "Rounding tolerance for discrepancy detection",
+      "value": 100,
+      "unit": "paise",
+      "source_url": null,
+      "effective_date": null,
+      "last_verified": "2026-11-23",
+      "verified": true
+    },
+    {
+      "rule_id": "HELPLINE_PMFBY",
+      "description": "PMFBY helpline number",
+      "value": "14447",
+      "unit": "phone",
+      "source_url": "https://pmfby.gov.in",
+      "effective_date": null,
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "HELPLINE_RBI_OMBUDSMAN",
+      "description": "RBI Integrated Ombudsman helpline number",
+      "value": "14448",
+      "unit": "phone",
+      "source_url": "https://cms.rbi.org.in",
+      "effective_date": null,
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "PORTAL_RBI_CMS",
+      "description": "RBI Complaint Management System portal URL",
+      "value": "https://cms.rbi.org.in",
+      "unit": "url",
+      "source_url": "https://cms.rbi.org.in",
+      "effective_date": null,
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "MSP_MAIZE",
+      "description": "MSP for Maize per quintal",
+      "value": 221800,
+      "unit": "paise_per_quintal",
+      "source_url": "https://farmer.gov.in/mspstatements.aspx",
+      "effective_date": "2025-10-01",
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "MSP_TUR",
+      "description": "MSP for Tur (Arhar) per quintal",
+      "value": 715000,
+      "unit": "paise_per_quintal",
+      "source_url": "https://farmer.gov.in/mspstatements.aspx",
+      "effective_date": "2025-10-01",
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "MSP_RAGI",
+      "description": "MSP for Ragi per quintal",
+      "value": 404600,
+      "unit": "paise_per_quintal",
+      "source_url": "https://farmer.gov.in/mspstatements.aspx",
+      "effective_date": "2025-10-01",
+      "last_verified": "2026-11-23",
+      "verified": false
+    },
+    {
+      "rule_id": "SMALL_CELL_THRESHOLD",
+      "description": "Minimum count for cells to avoid suppression in policy dashboard",
+      "value": 5,
+      "unit": "count",
+      "source_url": null,
+      "effective_date": null,
+      "last_verified": "2026-11-23",
+      "verified": true
+    },
+    {
+      "rule_id": "RULE_KCC_SUBVENTION",
+      "description": "KCC Interest Subvention Scheme: 3% central subvention for prompt repayment within 12 months up to ₹3L loan cap",
+      "value": 3,
+      "unit": "percent",
+      "source_url": "https://agricoop.nic.in/en/Programmes/credit",
+      "effective_date": "2025-04-01",
+      "last_verified": "2026-11-23",
+      "verified": true
+    },
+    {
+      "rule_id": "RULE_KUY_PADDY",
+      "description": "Chhattisgarh Krishak Unnati Yojana: ₹3,100 per quintal total payout (MSP + State Bonus) for up to 21 qtl/acre",
+      "value": 310000,
+      "unit": "paise_per_quintal",
+      "source_url": "https://kisan.cg.nic.in",
+      "effective_date": "2025-10-01",
+      "last_verified": "2026-11-23",
+      "verified": true
+    },
+    {
+      "rule_id": "RULE_PMFBY_CLAIM",
+      "description": "PMFBY Crop Insurance: 2% Kharif premium cap with 72-hour localized calamity intimation window",
+      "value": 2,
+      "unit": "percent",
+      "source_url": "https://pmfby.gov.in",
+      "effective_date": "2025-04-01",
+      "last_verified": "2026-11-23",
+      "verified": true
+    },
+    {
+      "rule_id": "RULE_PM_KISAN",
+      "description": "PM-KISAN Samman Nidhi: ₹6,000 annual direct income support in 3 four-monthly installments of ₹2,000 for landholding farmer families",
+      "value": 600000,
+      "unit": "paise_per_year",
+      "source_url": "https://pmkisan.gov.in",
+      "effective_date": "2019-02-01",
+      "last_verified": "2026-11-23",
+      "verified": true
+    },
+    {
+      "rule_id": "RULE_CG_SAUR_SUJALA",
+      "description": "Chhattisgarh Saur Sujala Yojana: High subsidy (up to 85%-95%) on 3HP/5HP solar irrigation pumps for unelectrified agricultural lands with water source",
+      "value": 85,
+      "unit": "percent_subsidy",
+      "source_url": "https://creda.cgstate.gov.in",
+      "effective_date": "2025-04-01",
+      "last_verified": "2026-11-23",
+      "verified": true
+    }
+  ]
+}

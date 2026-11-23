@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Farmer Grievance Letter</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+        body {
+            font-family: 'Noto Sans', sans-serif;
+            color: #212121;
+            line-height: 1.6;
+            font-size: 13pt;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #2E7D32;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .title {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #1B5E20;
+        }
+        .meta-table, .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        .meta-table td {
+            padding: 4px 8px;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #BDBDBD;
+            padding: 8px;
+            text-align: left;
+        }
+        .data-table th {
+            background-color: #E8F5E9;
+            color: #1B5E20;
+        }
+        .highlight {
+            font-weight: bold;
+            color: #D32F2F;
+        }
+        .footer {
+            margin-top: 30px;
+        }
+        .signature {
+            float: right;
+            text-align: right;
+            margin-top: 40px;
+        }
+        .hash-bar {
+            margin-top: 40px;
+            font-size: 8pt;
+            color: #757575;
+            border-top: 1px dashed #BDBDBD;
+            padding-top: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">FARMER GRIEVANCE REDRESSAL APPLICATION</div>
+        <div>Krishak Unnati Yojana / MSP / Loan / PMFBY Discrepancy (Govt. of Chhattisgarh)</div>
+    </div>
+
+    <table class="meta-table">
+        <tr>
+            <td><strong>To:</strong> {{ authority or authority_name }} ({{ authority_designation or 'Competent Authority' }})</td>
+            <td style="text-align: right;"><strong>Date:</strong> {{ letter_date or date_today }}</td>
+        </tr>
+        <tr>
+            <td><strong>District:</strong> {{ district }} (Chhattisgarh)</td>
+            <td style="text-align: right;"><strong>Case Ref No:</strong> {{ case_id }}</td>
+        </tr>
+    </table>
+
+    <p><strong>Subject:</strong> {{ subject or 'Representation Regarding Discrepancy in Agricultural Scheme Entitlements' }}</p>
+
+    <p>Respected Sir/Madam,</p>
+    <p>
+        I, <strong>{{ farmer_name }}</strong> (s/o Shri <strong>{{ father_name }}</strong>), 
+        resident of Village <strong>{{ village }}</strong>, Tehsil <strong>{{ tehsil or village }}</strong>, District <strong>{{ district }}</strong>, submit this representation.
+    </p>
+
+    <p>{{ grievance_body or 'The following discrepancy has been detected in my statutory agricultural entitlements for registered land parcels:' }}</p>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Khasra No</th>
+                <th>Area (ha)</th>
+                <th>Area (acres)</th>
+                <th>Scheme</th>
+                <th>Entitled (₹)</th>
+                <th>Received (₹)</th>
+                <th>Discrepancy (₹)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in affected_parcels %}
+            <tr>
+                <td>{{ p.khasra_no }}</td>
+                <td>{{ p.hectares or '-' }}</td>
+                <td>{{ p.area_acres or p.acres or '-' }}</td>
+                <td>{{ p.crop or p.scheme or 'Paddy ( धान )' }}</td>
+                <td>{{ p.entitled_rupees or entitled_amount_display }}</td>
+                <td>{{ p.received_rupees or actual_amount_display }}</td>
+                <td class="highlight">{{ p.shortfall_rupees or gap_amount_display }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p>
+        <strong>Rule & Discrepancy Details:</strong><br>
+        {{ discrepancy_details or discrepancy_reason }}
+    </p>
+
+    <p>
+        I earnestly request your good office to investigate this discrepancy and disburse the balance amount or effect the required correction at the earliest.
+    </p>
+
+    <div class="footer">
+        <div class="signature">
+            <br>
+            Yours faithfully,<br><br>
+            <strong>{{ farmer_name }}</strong><br>
+            Mob: {{ masked_mobile or mobile_masked }}
+        </div>
+    </div>
+    <div style="clear: both;"></div>
+
+    <div class="hash-bar">
+        Digital Receipt Hash: {{ receipt_hash or verification_hash }} | System: Agri-Transparency Platform (Synthetic Demo Data)
+    </div>
+</body>
+</html>

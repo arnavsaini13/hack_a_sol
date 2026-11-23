@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>शिकायत पत्र / Grievance Letter</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+        body {
+            font-family: 'Noto Sans Devanagari', 'Noto Sans', sans-serif;
+            color: #212121;
+            line-height: 1.6;
+            font-size: 13pt;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #2E7D32;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .title {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #1B5E20;
+        }
+        .meta-table, .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        .meta-table td {
+            padding: 4px 8px;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #BDBDBD;
+            padding: 8px;
+            text-align: left;
+        }
+        .data-table th {
+            background-color: #E8F5E9;
+            color: #1B5E20;
+        }
+        .highlight {
+            font-weight: bold;
+            color: #D32F2F;
+        }
+        .footer {
+            margin-top: 30px;
+        }
+        .signature {
+            float: right;
+            text-align: right;
+            margin-top: 40px;
+        }
+        .hash-bar {
+            margin-top: 40px;
+            font-size: 8pt;
+            color: #757575;
+            border-top: 1px dashed #BDBDBD;
+            padding-top: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">किसान शिकायत एवं निवारण आवेदन पत्र</div>
+        <div>कृषक उन्नति योजना / एमएसपी / ऋण / फसल बीमा विसंगति (छत्तीसगढ़ शासन)</div>
+    </div>
+
+    <table class="meta-table">
+        <tr>
+            <td><strong>सेवा में:</strong> {{ authority or authority_name }} ({{ authority_designation or 'सक्षम प्राधिकारी' }})</td>
+            <td style="text-align: right;"><strong>दिनांक:</strong> {{ letter_date or date_today }}</td>
+        </tr>
+        <tr>
+            <td><strong>ज़िला:</strong> {{ district }} (छत्तीसगढ़)</td>
+            <td style="text-align: right;"><strong>शिकायत संदर्भ क्र.:</strong> {{ case_id }}</td>
+        </tr>
+    </table>
+
+    <p><strong>विषय:</strong> {{ subject or 'कृषक हितग्राहियों को देय लाभ में विसंगति के संबंध में आवेदन' }}</p>
+
+    <p>महोदय / महोदया,</p>
+    <p>
+        मैं <strong>{{ farmer_name }}</strong> (आत्मज श्री <strong>{{ father_name }}</strong>), 
+        ग्राम <strong>{{ village }}</strong>, तहसील <strong>{{ tehsil or village }}</strong>, ज़िला <strong>{{ district }}</strong> (छत्तीसगढ़) का निवासी किसान हूँ।
+    </p>
+
+    <p>{{ grievance_body or 'मेरे द्वारा शासन की योजनाओं के तहत पंजीकृत रकबे पर नियमानुसार देय लाभ के संबंध में निम्नलिखित विसंगति दर्ज की गई है:' }}</p>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>खसरा क्रमांक</th>
+                <th>रकबा (हेक्टेयर)</th>
+                <th>रकबा (एकड़)</th>
+                <th>योजना / विषय</th>
+                <th>पात्र राशि (₹)</th>
+                <th>प्राप्त राशि (₹)</th>
+                <th>विसंगति / बकाया (₹)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in affected_parcels %}
+            <tr>
+                <td>{{ p.khasra_no }}</td>
+                <td>{{ p.hectares or '-' }}</td>
+                <td>{{ p.area_acres or p.acres or '-' }}</td>
+                <td>{{ p.crop or p.scheme or 'धान (Paddy)' }}</td>
+                <td>{{ p.entitled_rupees or entitled_amount_display }}</td>
+                <td>{{ p.received_rupees or actual_amount_display }}</td>
+                <td class="highlight">{{ p.shortfall_rupees or gap_amount_display }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p>
+        <strong>नियम एवं विसंगति विवरण:</strong><br>
+        {{ discrepancy_details or discrepancy_reason }}
+    </p>
+
+    <p>
+        अतः श्रीमान् से सविनय निवेदन है कि उक्त प्रकरण की त्वरित जाँच कर नियमानुसार शेष राशि का भुगतान करवाने अथवा आवश्यक सुधार करने की कृपा करें।
+    </p>
+
+    <div class="footer">
+        <div class="signature">
+            <br>
+            भवदीय,<br><br>
+            <strong>{{ farmer_name }}</strong><br>
+            मो.: {{ masked_mobile or mobile_masked }}
+        </div>
+    </div>
+    <div style="clear: both;"></div>
+
+    <div class="hash-bar">
+        डिजिटल पावती हैश / SHA-256 Receipt Hash: {{ receipt_hash or verification_hash }} | सिस्टम: कृषि पारदर्शिता मंच (Synthetic Demo Verified)
+    </div>
+</body>
+</html>

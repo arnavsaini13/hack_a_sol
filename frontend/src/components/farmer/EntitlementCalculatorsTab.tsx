@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { calculateKCC, calculatePaddy, calculatePMFBY } from '../../services/api';
 import { useTranslation } from '../../i18n';
+import { usePageContext } from '../../context/PageContext';
 import { FieldVoiceSpeaker } from '../common/FieldVoiceSpeaker';
 import type { FarmerSnapshot, FarmerProfile, DiscrepancyItem } from '../../types/models';
 
@@ -41,6 +42,22 @@ export const EntitlementCalculatorsTab: React.FC<EntitlementCalculatorsTabProps>
   );
   const [kccResult, setKccResult] = useState<any>(null);
   const [kccStepsExpanded, setKccStepsExpanded] = useState<boolean>(false);
+
+  // Hook into AI Co-Pilot PageContext
+  const { pendingFields, setPendingFields, highlightedField, setHighlightedField } = usePageContext();
+
+  useEffect(() => {
+    if (pendingFields && pendingFields.amount !== undefined) {
+      const amtInPaise = typeof pendingFields.amount === 'number' ? pendingFields.amount * 100 : 20000000;
+      setKccPrincipal(amtInPaise);
+      if (pendingFields.tenure_months) {
+        setKccMonths(pendingFields.tenure_months);
+      }
+      setHighlightedField('kcc-amount');
+      // Clear pendingFields after consuming so it does not loop
+      setPendingFields(null);
+    }
+  }, [pendingFields, setPendingFields, setHighlightedField]);
 
   // ───────────────────────────────────────────────────────────────────
   // 2. GENERAL CROP & PROCUREMENT CALCULATOR STATE
@@ -238,7 +255,11 @@ export const EntitlementCalculatorsTab: React.FC<EntitlementCalculatorsTabProps>
               step={10000}
               value={kccPrincipal / 100}
               onChange={(e) => setKccPrincipal(Math.max(0, parseInt(e.target.value || '0', 10) * 100))}
-              className="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-slate-900 bg-white"
+              className={`w-full px-3 py-2 rounded-xl border font-bold text-slate-900 bg-white transition-all duration-500 ${
+                highlightedField === 'kcc-amount'
+                  ? 'ring-4 ring-amber-400 border-amber-500 bg-amber-50 shadow-md'
+                  : 'border-slate-300'
+              }`}
             />
           </div>
 

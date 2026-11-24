@@ -10,10 +10,10 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'कृषि पारदर्शिता मंच / Agri-Transparency Platform',
-        short_name: 'AgriTransparency',
+        name: 'JanAgriPortal (जन-कृषि मंच)',
+        short_name: 'JanAgriPortal',
         description: 'Statutory transparency platform for paddy farmers, bank officers, and policymakers.',
-        theme_color: '#1B5E20',
+        theme_color: '#15803d',
         background_color: '#F8FAF8',
         display: 'standalone',
         orientation: 'portrait',
@@ -31,8 +31,6 @@ export default defineConfig({
         ]
       },
       workbox: {
-        swDest: path.resolve(__dirname, 'dist/sw.js'),
-        globDirectory: path.resolve(__dirname, 'dist'),
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,json}'],
         runtimeCaching: [
           {

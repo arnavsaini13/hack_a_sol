@@ -244,3 +244,38 @@ def get_current_bank_officer(
     return officer
 
 
+def get_current_policy_officer(
+    request: Request,
+    db: Session = Depends(get_db)
+) -> StaffUser:
+    """Derive authenticated policy officer from HTTP-only session cookie or Bearer token."""
+    token = request.cookies.get(SESSION_COOKIE_NAME)
+    if not token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split("Bearer ")[1].strip()
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Policy Officer authentication required. Please sign in."
+        )
+
+    session = get_session(token)
+    if not session or session.get("role") != "POLICY_MAKER":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired Policy Officer session. Please sign in again."
+        )
+
+    officer_id = session.get("user_id")
+    officer = db.query(StaffUser).filter(StaffUser.id == officer_id).first()
+    if not officer or not officer.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Policy officer account not found or deactivated."
+        )
+    return officer
+
+
+

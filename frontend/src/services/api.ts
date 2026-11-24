@@ -11,7 +11,8 @@ import type {
   RulesData,
 } from '../types/models';
 
-const API_BASE = '/api';
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
+const API_BASE = `${API_BASE_URL}/api`;
 
 export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${API_BASE}${endpoint}`, {
@@ -239,6 +240,52 @@ export async function logoutBankOfficer() {
     method: 'POST',
   });
 }
+
+// ── Policy Officer Auth APIs ──────────────────────────────────────────
+
+export interface PolicyOfficerProfile {
+  id: string;
+  full_name: string;
+  email: string;
+  employee_id: string;
+  department: string;
+  designation: string;
+  jurisdiction: string;
+  role: string;
+}
+
+export async function registerPolicyOfficer(data: {
+  full_name: string;
+  email: string;
+  employee_id: string;
+  department: string;
+  designation: string;
+  jurisdiction: string;
+  password: string;
+}) {
+  return apiFetch<{ message: string; officer: PolicyOfficerProfile; session_token: string }>('/v1/auth/policy/register', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function loginPolicyOfficer(data: { identifier: string; password: string }) {
+  return apiFetch<{ message: string; officer: PolicyOfficerProfile; session_token: string }>('/v1/auth/policy/login', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getPolicyOfficerMe() {
+  return apiFetch<PolicyOfficerProfile>('/v1/auth/policy/me');
+}
+
+export async function logoutPolicyOfficer() {
+  return apiFetch<{ message: string }>('/v1/auth/policy/logout', {
+    method: 'POST',
+  });
+}
+
 
 export async function getBankLocations() {
   return apiFetch<{ districts: string[]; hierarchy: Record<string, Record<string, string[]>> }>('/v1/bank/locations');

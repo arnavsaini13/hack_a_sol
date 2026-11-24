@@ -16,10 +16,10 @@ export const RoleSelectionGate: React.FC = () => {
             <ShieldCheck className="w-4 h-4 text-emerald-700" />
             <span>
               {language === 'chh'
-                ? 'छत्तीसगढ़ शासन • आधिकारिक नागरिक पारदर्शिता मंच'
+                ? 'जन-कृषि मंच • पारदर्शी नागरिक अधिकार पोर्टल'
                 : language === 'hi'
-                ? 'छत्तीसगढ़ शासन • आधिकारिक नागरिक पारदर्शिता मंच'
-                : 'Government of Chhattisgarh • Official Citizen Portal'}
+                ? 'जन-कृषि मंच • पारदर्शी नागरिक अधिकार पोर्टल'
+                : 'JanAgriPortal • Open Agricultural Entitlements & Verification Platform'}
             </span>
           </div>
 
@@ -140,9 +140,9 @@ export const RoleSelectionGate: React.FC = () => {
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>
               {language === 'chh'
-                ? 'किसान नीति, फसल बीमा अउ करजा पारदर्शिता मंच • छत्तीसगढ़ शासन'
+                ? 'किसान नीति, फसल बीमा अउ करजा पारदर्शिता मंच • जन-कृषि'
                 : language === 'hi'
-                ? 'कृषि नीति, फसल बीमा एवं ऋण पारदर्शिता मंच • छत्तीसगढ़ शासन'
+                ? 'कृषि नीति, फसल बीमा एवं ऋण पारदर्शिता मंच • जन-कृषि'
                 : 'Agricultural Policy, Crop Insurance & Credit Transparency Platform'}
             </span>
           </div>

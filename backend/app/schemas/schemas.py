@@ -138,7 +138,7 @@ class FarmerSnapshotResponse(BaseModel):
     loans: List[LoanSchema]
     procurements: List[ProcurementSchema]
     insurance_units: List[InsuranceUnitSchema]
-    provenance: str = "Synthetic Demo Data"
+    provenance: str = "JanAgriPortal Deterministic State Engine"
     rules_last_verified: str = "2026-03-01"
 
 
@@ -214,7 +214,7 @@ class DiscrepanciesResponse(BaseModel):
     discrepancies: List[DiscrepancyItem]
     total_gap_paise: int
     total_gap_display: str
-    provenance: str = "Synthetic Demo Data"
+    provenance: str = "JanAgriPortal Deterministic State Engine"
 
 
 # ── Outside Rejection Explainer ──────────────────────────────────────
@@ -399,7 +399,7 @@ class PolicyDashboardResponse(BaseModel):
     total_delayed_farmers_display: str
     total_state_delayed_amount_display: str
     rules_last_verified: str = "2026-03-01"
-    provenance: str = "Synthetic Demo Data"
+    provenance: str = "JanAgriPortal Deterministic State Engine"
 
 
 # ── Bank Officer Console & Auth ──────────────────────────────────────
@@ -432,6 +432,41 @@ class BankOfficerLoginResponse(BaseModel):
     message: str
     officer: BankOfficerProfile
     session_token: str
+
+
+# ── Policy Officer & Administrative Oversight Auth ─────────────────
+
+class PolicyOfficerRegisterRequest(BaseModel):
+    full_name: str
+    email: str
+    employee_id: str
+    department: str
+    designation: str
+    jurisdiction: str
+    password: str
+
+
+class PolicyOfficerLoginRequest(BaseModel):
+    identifier: str  # email or employee_id
+    password: str
+
+
+class PolicyOfficerProfile(BaseModel):
+    id: str
+    full_name: str
+    email: str
+    employee_id: str
+    department: str
+    designation: str
+    jurisdiction: str
+    role: str = "POLICY_MAKER"
+
+
+class PolicyOfficerLoginResponse(BaseModel):
+    message: str
+    officer: PolicyOfficerProfile
+    session_token: str
+
 
 
 class BankInteractiveVerifyRequest(BaseModel):

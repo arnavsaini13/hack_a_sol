@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { evaluateSchemes, applyFarmerScheme, getAppliedSchemes } from '../../services/api';
 import { useTranslation } from '../../i18n';
+import { usePageContext } from '../../context/PageContext';
 import { speechPlayer } from '../../utils/audio';
 import type { FarmerSnapshot, FarmerProfile } from '../../types/models';
 
@@ -51,6 +52,15 @@ export const SchemesEligibilityTab: React.FC<SchemesEligibilityTabProps> = ({
     sujala_has_grid: false,
   });
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // Hook into AI Co-Pilot scheme_filter
+  const { pendingFields, setPendingFields } = usePageContext();
+  useEffect(() => {
+    if (pendingFields && pendingFields.scheme_filter) {
+      setSearchQuery(pendingFields.scheme_filter);
+      setPendingFields(null);
+    }
+  }, [pendingFields, setPendingFields]);
 
   // Audio Voice Summary for an individual scheme
   const handleToggleVoice = (scheme: any, e: React.MouseEvent) => {

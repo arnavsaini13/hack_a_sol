@@ -11,6 +11,7 @@
     "test:i18n": "node scripts/test-i18n-parity.js"
   },
   "dependencies": {
+    "@capacitor/core": "^8.6.2",
     "clsx": "^2.1.1",
     "idb-keyval": "^6.2.1",
     "lucide-react": "^0.441.0",
@@ -21,6 +22,8 @@
     "tailwind-merge": "^2.5.2"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/cli": "^8.6.2",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",

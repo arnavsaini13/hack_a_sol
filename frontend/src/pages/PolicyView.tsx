@@ -9,11 +9,22 @@ import {
   ArrowRight,
   Shield,
   EyeOff,
-  Filter
+  Filter,
+  User,
+  LogOut,
+  Building,
+  MapPin
 } from 'lucide-react';
 import { useTranslation } from '../i18n';
-import { getPolicyBottlenecks, getPolicyAuditLog } from '../services/api';
+import {
+  getPolicyBottlenecks,
+  getPolicyAuditLog,
+  getPolicyOfficerMe,
+  logoutPolicyOfficer,
+  type PolicyOfficerProfile
+} from '../services/api';
 import type { PolicyDashboardData } from '../types/models';
+import { PolicyOfficerAuthGate } from '../components/policy/PolicyOfficerAuthGate';
 
 interface AuditLogResponse {
   chain_valid: boolean;
@@ -34,6 +45,10 @@ interface AuditLogResponse {
 export const PolicyView: React.FC = () => {
   const { t } = useTranslation();
 
+  // Authentication State
+  const [officer, setOfficer] = useState<PolicyOfficerProfile | null>(null);
+  const [authChecking, setAuthChecking] = useState<boolean>(true);
+
   const [activeTab, setActiveTab] = useState<'bottlenecks' | 'audit'>('bottlenecks');
   const [loading, setLoading] = useState<boolean>(true);
   const [bottleneckData, setBottleneckData] = useState<PolicyDashboardData | null>(null);
@@ -42,6 +57,48 @@ export const PolicyView: React.FC = () => {
   // Filters
   const [selectedScheme, setSelectedScheme] = useState<string>('ALL');
   const [searchDistrict, setSearchDistrict] = useState<string>('');
+
+  // Check auth session
+  useEffect(() => {
+    async function checkAuth() {
+      setAuthChecking(true);
+      try {
+        const me = await getPolicyOfficerMe();
+        setOfficer(me);
+      } catch {
+        const cached = localStorage.getItem('janagri_policy_officer');
+        if (cached) {
+          try {
+            setOfficer(JSON.parse(cached));
+          } catch {
+            localStorage.removeItem('janagri_policy_officer');
+          }
+        }
+      } finally {
+        setAuthChecking(false);
+      }
+    }
+    checkAuth();
+  }, []);
+
+  const handleAuthenticated = (authedOfficer: PolicyOfficerProfile) => {
+    setOfficer(authedOfficer);
+    try {
+      localStorage.setItem('janagri_policy_officer', JSON.stringify(authedOfficer));
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logoutPolicyOfficer();
+    } catch {
+      // ignore
+    }
+    localStorage.removeItem('janagri_policy_officer');
+    setOfficer(null);
+  };
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -60,8 +117,25 @@ export const PolicyView: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (officer) {
+      loadData();
+    }
+  }, [officer, loadData]);
+
+  // Auth Gate
+  if (!officer) {
+    if (authChecking) {
+      return (
+        <div className="flex flex-col items-center justify-center p-16 space-y-3">
+          <RefreshCw className="w-8 h-8 text-purple-700 animate-spin" />
+          <span className="text-sm font-semibold text-slate-600">
+            Checking Policy Officer authorization...
+          </span>
+        </div>
+      );
+    }
+    return <PolicyOfficerAuthGate onAuthenticated={handleAuthenticated} />;
+  }
 
   const filteredBottlenecks = (bottleneckData?.bottlenecks || []).filter((item) => {
     if (selectedScheme !== 'ALL' && item.scheme !== selectedScheme) return false;
@@ -74,25 +148,72 @@ export const PolicyView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* AgriGov Portal Top Banner */}
-      <div className="bg-gradient-to-r from-emerald-800 via-teal-800 to-agri-dark text-white rounded-2xl p-6 shadow-sm border border-emerald-700">
+      {/* Policy Officer Verified Institutional Header */}
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in">
+        <div className="flex items-start sm:items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-800 flex items-center justify-center flex-shrink-0 border border-purple-300 shadow-inner">
+            <User className="w-6 h-6 text-purple-700" />
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 leading-tight">
+                {officer.full_name}
+              </h2>
+              <span className="text-[11px] bg-purple-100 text-purple-900 font-bold px-2.5 py-0.5 rounded-full border border-purple-300 inline-flex items-center gap-1 font-mono">
+                <ShieldCheck className="w-3.5 h-3.5 text-purple-700" />
+                <span>{officer.employee_id}</span>
+              </span>
+            </div>
+
+            <div className="text-xs text-slate-600 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="inline-flex items-center gap-1">
+                <Building className="w-3 h-3 text-purple-700" />
+                <span><strong>Department:</strong> {officer.department}</span>
+              </span>
+              <span className="text-slate-300">•</span>
+              <span><strong>Designation:</strong> {officer.designation}</span>
+              <span className="text-slate-300">•</span>
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-indigo-600" />
+                <span><strong>Jurisdiction:</strong> {officer.jurisdiction}</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Sign Out Button */}
+        <div className="self-end md:self-auto shrink-0">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="px-3.5 py-2 rounded-xl border border-slate-300 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs min-h-[40px]"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Top Banner (Clean JanAgriPortal Platform Branding) */}
+      <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 text-white rounded-2xl p-6 shadow-sm border border-purple-800">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs uppercase tracking-widest bg-emerald-500/30 text-emerald-200 px-2.5 py-0.5 rounded font-bold">
-                AgriGov Portal
+              <span className="text-xs uppercase tracking-widest bg-purple-500/30 text-purple-200 px-2.5 py-0.5 rounded font-bold border border-purple-400/30">
+                JanAgriPortal
               </span>
-              <span className="text-xs text-emerald-200">Government of Chhattisgarh</span>
+              <span className="text-xs text-purple-200">State Policy & Statistical Oversight</span>
             </div>
             <h2 className="text-2xl font-bold mt-1">{t('policy.title')}</h2>
-            <p className="text-xs text-emerald-100/90 mt-0.5">{t('policy.subtitle')}</p>
+            <p className="text-xs text-purple-100/90 mt-0.5">{t('policy.subtitle')}</p>
           </div>
 
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={loadData}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-white transition-colors border border-white/20"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-white transition-colors border border-white/20 min-h-[40px]"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Refresh Metrics</span>

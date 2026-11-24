@@ -43,3 +43,18 @@ class TemplateService:
         template_name = f"grievance/letter_{lang}.html"
         return self.render(template_name, context)
 
+    def render_grievance_pdf_safe(self, context: dict[str, Any], language: str = "hi") -> tuple[bytes, str]:
+        """
+        Safely generates PDF if WeasyPrint is installed and system libraries (cairo/pango) are present.
+        Falls back to UTF-8 encoded printable HTML on systems/containers without cairo.
+        Returns: (payload_bytes, media_type)
+        """
+        html_str = self.render_grievance_letter(context, language)
+        try:
+            from weasyprint import HTML
+            pdf_bytes = HTML(string=html_str).write_pdf()
+            return pdf_bytes, "application/pdf"
+        except (ImportError, OSError, Exception):
+            return html_str.encode("utf-8"), "text/html"
+
+

@@ -7,6 +7,7 @@ import {
   CreditCard
 } from 'lucide-react';
 import { useTranslation } from '../i18n';
+import { usePageContext } from '../context/PageContext';
 import {
   getFarmerSnapshot,
   getFarmerCases,
@@ -22,12 +23,14 @@ import type {
 
 import { FarmerLookupGate } from '../components/farmer/FarmerLookupGate';
 import { FarmerProfileHeader } from '../components/farmer/FarmerProfileHeader';
+import { FarmerHeroBanner } from '../components/farmer/FarmerHeroBanner';
 import { EntitlementCalculatorsTab } from '../components/farmer/EntitlementCalculatorsTab';
 import { SchemesEligibilityTab } from '../components/farmer/SchemesEligibilityTab';
 import { GapsAndCasesTab } from '../components/farmer/GapsAndCasesTab';
 import { MyLoans } from '../components/farmer/MyLoans';
 import { LetterModal } from '../components/farmer/LetterModal';
 import { RejectionExplainerModal } from '../components/farmer/RejectionExplainerModal';
+import { ChatWidget } from '../components/chat/ChatWidget';
 
 export const FarmerView: React.FC = () => {
   const { t, language } = useTranslation();
@@ -39,6 +42,36 @@ export const FarmerView: React.FC = () => {
 
   // 4 Clean Tabs
   const [activeTab, setActiveTab] = useState<'calculators' | 'schemes' | 'cases' | 'loans'>('calculators');
+
+  // PageContext for AI Co-Pilot
+  const { setPageInfo, pendingFields, setActiveFarmerId } = usePageContext();
+
+  useEffect(() => {
+    setPageInfo({
+      page: 'Farmer Portal',
+      route: '/farmer',
+      summary: `Farmer Entitlements & Transparency Portal. Current Tab: ${activeTab}. Active Farmer: ${farmer ? farmer.name_en : 'Not selected'}`,
+      visibleData: {
+        farmerId: farmer?.id,
+        farmerName: farmer?.name_en,
+        activeTab: activeTab,
+        totalCases: cases.length,
+      },
+    });
+  }, [farmer, activeTab, cases.length, setPageInfo]);
+
+  // Handle Co-Pilot pendingFields UI navigation
+  useEffect(() => {
+    if (pendingFields) {
+      if (pendingFields.tab && ['calculators', 'schemes', 'cases', 'loans'].includes(pendingFields.tab)) {
+        setActiveTab(pendingFields.tab as any);
+      } else if (pendingFields.amount !== undefined || pendingFields.tenure_months !== undefined) {
+        setActiveTab('calculators');
+      } else if (pendingFields.scheme_filter) {
+        setActiveTab('schemes');
+      }
+    }
+  }, [pendingFields]);
 
   // Modals state
   const [activeCaseForLetter, setActiveCaseForLetter] = useState<CaseItem | null>(null);
@@ -52,6 +85,7 @@ export const FarmerView: React.FC = () => {
   const handleFarmerVerified = async (verifiedFarmer: FarmerProfile) => {
     setLoading(true);
     setFarmer(verifiedFarmer);
+    setActiveFarmerId(verifiedFarmer.id);
     try {
       const [snapData, casesData] = await Promise.all([
         getFarmerSnapshot(),
@@ -136,6 +170,9 @@ export const FarmerView: React.FC = () => {
   if (!farmer) {
     return (
       <div className="space-y-6">
+        {/* Official Hero Banner with Jai Jawan Jai Kisan */}
+        <FarmerHeroBanner />
+
         <FarmerLookupGate onFarmerVerified={handleFarmerVerified} />
         <RejectionExplainerModal
           isOpen={isRejectionModalOpen}
@@ -173,14 +210,19 @@ export const FarmerView: React.FC = () => {
         onLogout={handleLogout}
       />
 
+      {/* Hero Banner with Jai Jawan Jai Kisan */}
+      <FarmerHeroBanner
+        farmerName={language === 'en' ? farmer.name_en : farmer.name_hi}
+      />
+
       {/* 4 Clean Tabs */}
-      <div className="flex border-b border-slate-200 bg-white rounded-2xl p-1.5 shadow-xs gap-1.5 overflow-x-auto no-scrollbar">
+      <div className="flex border-2 border-emerald-100 bg-white rounded-2xl p-1.5 shadow-sm gap-1.5 overflow-x-auto no-scrollbar">
         {/* Tab 1: Entitlement Calculators */}
         <button
           type="button"
           onClick={() => setActiveTab('calculators')}
           className={`flex-1 py-3 px-3 rounded-xl font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all min-h-[48px] whitespace-nowrap ${activeTab === 'calculators'
-            ? 'bg-emerald-800 text-white shadow-xs'
+            ? 'bg-[#15803d] text-white shadow-md'
             : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
         >
@@ -193,7 +235,7 @@ export const FarmerView: React.FC = () => {
           type="button"
           onClick={() => setActiveTab('schemes')}
           className={`flex-1 py-3 px-3 rounded-xl font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all min-h-[48px] whitespace-nowrap ${activeTab === 'schemes'
-            ? 'bg-emerald-800 text-white shadow-xs'
+            ? 'bg-[#15803d] text-white shadow-md'
             : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
         >
@@ -206,7 +248,7 @@ export const FarmerView: React.FC = () => {
           type="button"
           onClick={() => setActiveTab('cases')}
           className={`flex-1 py-3 px-3 rounded-xl font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all min-h-[48px] whitespace-nowrap ${activeTab === 'cases'
-            ? 'bg-emerald-800 text-white shadow-xs'
+            ? 'bg-[#15803d] text-white shadow-md'
             : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
         >
@@ -224,7 +266,7 @@ export const FarmerView: React.FC = () => {
           type="button"
           onClick={() => setActiveTab('loans')}
           className={`flex-1 py-3 px-3 rounded-xl font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all min-h-[48px] whitespace-nowrap ${activeTab === 'loans'
-            ? 'bg-emerald-800 text-white shadow-xs'
+            ? 'bg-[#15803d] text-white shadow-md'
             : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
         >
@@ -302,6 +344,9 @@ export const FarmerView: React.FC = () => {
         isOpen={isRejectionModalOpen}
         onClose={() => setIsRejectionModalOpen(false)}
       />
+
+      {/* AI Co-Pilot Assistant - Active only on Farmer main interface */}
+      <ChatWidget />
     </div>
   );
 };

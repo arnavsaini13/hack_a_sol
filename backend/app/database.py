@@ -26,6 +26,8 @@ DEFAULT_SQLITE_URL = f"sqlite:///{DB_PATH.as_posix()}"
 
 # Read connection string from environment (e.g. Supabase PostgreSQL)
 raw_url = os.environ.get("DATABASE_URL") or os.environ.get("SUPABASE_DB_URL") or DEFAULT_SQLITE_URL
+if "PYTEST_CURRENT_TEST" in os.environ or os.environ.get("USE_SQLITE") == "1":
+    raw_url = DEFAULT_SQLITE_URL
 
 # Safety fallback: if placeholder password is still present, warn and fallback to SQLite
 if "[YOUR-DATABASE-PASSWORD]" in raw_url or "[YOUR-PASSWORD]" in raw_url:
@@ -37,29 +39,35 @@ if "[YOUR-DATABASE-PASSWORD]" in raw_url or "[YOUR-PASSWORD]" in raw_url:
 if raw_url.startswith("postgres://"):
     raw_url = raw_url.replace("postgres://", "postgresql://", 1)
 
+def _build_engine(url: str):
+    is_sqlite = url.startswith("sqlite")
+    is_postgres = url.startswith("postgresql")
+    kwargs = {"echo": False}
+    c_args = {}
+    if is_sqlite:
+        c_args["check_same_thread"] = False
+    elif is_postgres:
+        c_args["connect_timeout"] = 3
+        kwargs.update({
+            "pool_size": int(os.environ.get("DB_POOL_SIZE", "10")),
+            "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", "20")),
+            "pool_pre_ping": True,
+        })
+    return create_engine(url, connect_args=c_args, **kwargs), is_sqlite, is_postgres
+
 DATABASE_URL = raw_url
-IS_SQLITE = DATABASE_URL.startswith("sqlite")
-IS_POSTGRES = DATABASE_URL.startswith("postgresql")
+engine, IS_SQLITE, IS_POSTGRES = _build_engine(DATABASE_URL)
 
-# Configure engine arguments based on dialect
-engine_kwargs = {"echo": False}
-connect_args = {}
+# Verification & SQLite fallback if PostgreSQL host cannot be reached
+if IS_POSTGRES:
+    try:
+        with engine.connect() as _test_conn:
+            pass
+    except Exception as _e:
+        print(f"[WARN] PostgreSQL connection failed ({_e}). Falling back to SQLite.")
+        DATABASE_URL = DEFAULT_SQLITE_URL
+        engine, IS_SQLITE, IS_POSTGRES = _build_engine(DATABASE_URL)
 
-if IS_SQLITE:
-    connect_args["check_same_thread"] = False
-elif IS_POSTGRES:
-    # Supabase connection pool configuration
-    engine_kwargs.update({
-        "pool_size": int(os.environ.get("DB_POOL_SIZE", "10")),
-        "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", "20")),
-        "pool_pre_ping": True,  # Auto-reconnect dropped connections
-    })
-
-engine = create_engine(
-    DATABASE_URL,
-    connect_args=connect_args,
-    **engine_kwargs
-)
 
 # Enforce WAL mode and foreign keys on SQLite connections only
 @event.listens_for(Engine, "connect")

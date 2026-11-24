@@ -156,7 +156,7 @@ export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVeri
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
               <span>
-                {language === 'chh' ? 'छत्तीसगढ़ किसान पहचान गेट' : language === 'hi' ? 'छत्तीसगढ़ किसान पहचान गेट' : 'Chhattisgarh Farmer Identification Gate'}
+                {language === 'chh' ? 'किसान पहचान एवं सत्यापन गेट' : language === 'hi' ? 'किसान पहचान एवं सत्यापन गेट' : 'Farmer Identification & Verification Gate'}
               </span>
             </span>
 

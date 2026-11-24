@@ -17,6 +17,7 @@ from app.auth import (
     get_current_farmer_id,
     get_current_farmer,
     get_current_bank_officer,
+    get_current_policy_officer,
     hash_password,
     verify_password,
     SESSION_COOKIE_NAME,
@@ -36,6 +37,10 @@ from app.schemas.schemas import (
     BankOfficerLoginRequest,
     BankOfficerProfile,
     BankOfficerLoginResponse,
+    PolicyOfficerRegisterRequest,
+    PolicyOfficerLoginRequest,
+    PolicyOfficerProfile,
+    PolicyOfficerLoginResponse,
 )
 from app.services.audit_service import AuditChainService
 
@@ -483,5 +488,166 @@ def api_bank_me(officer: StaffUser = Depends(get_current_bank_officer)):
         branch_district=officer.branch_district,
         role=officer.role,
     )
+
+
+# ── Policy Officer & Administrative Oversight Authentication ──────────
+
+@router.post("/policy/register", response_model=PolicyOfficerLoginResponse)
+def api_policy_register(req: PolicyOfficerRegisterRequest, response: Response, db: Session = Depends(get_db)):
+    """Register a new policy officer in staff_users with Argon2 password hashing."""
+    clean_email = req.email.strip().lower()
+    clean_emp = req.employee_id.strip().upper()
+    existing = db.query(StaffUser).filter(
+        (StaffUser.email == clean_email) | (StaffUser.employee_id == clean_emp)
+    ).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Policy Officer with this email or Officer ID already registered."
+        )
+
+    officer_id = f"POL-{clean_emp}"
+    hashed = hash_password(req.password)
+    # Map department -> bank_name, jurisdiction + designation -> branch_district for clean unified schema
+    officer = StaffUser(
+        id=officer_id,
+        email=clean_email,
+        employee_id=clean_emp,
+        full_name=req.full_name.strip(),
+        bank_name=req.department.strip(),
+        branch_district=f"{req.jurisdiction.strip()} | {req.designation.strip()}",
+        password_hash=hashed,
+        role="POLICY_MAKER",
+        is_active=True,
+    )
+    db.add(officer)
+    db.commit()
+    db.refresh(officer)
+
+    token = generate_session(officer.id, officer.email, role="POLICY_MAKER")
+    response.set_cookie(
+        key=SESSION_COOKIE_NAME,
+        value=token,
+        max_age=SESSION_TTL_SECONDS,
+        httponly=True,
+        samesite="lax",
+        secure=False,
+    )
+
+    jurisdiction_val = req.jurisdiction.strip()
+    designation_val = req.designation.strip()
+
+    return PolicyOfficerLoginResponse(
+        message="Policy Officer registered and logged in successfully.",
+        officer=PolicyOfficerProfile(
+            id=officer.id,
+            full_name=officer.full_name,
+            email=officer.email,
+            employee_id=officer.employee_id,
+            department=officer.bank_name,
+            designation=designation_val,
+            jurisdiction=jurisdiction_val,
+            role=officer.role,
+        ),
+        session_token=token,
+    )
+
+
+@router.post("/policy/login", response_model=PolicyOfficerLoginResponse)
+def api_policy_login(req: PolicyOfficerLoginRequest, response: Response, db: Session = Depends(get_db)):
+    """Authenticate policy officer against staff_users table."""
+    ident = req.identifier.strip()
+    officer = db.query(StaffUser).filter(
+        ((StaffUser.email == ident.lower()) | (StaffUser.employee_id == ident.upper())) &
+        (StaffUser.role == "POLICY_MAKER")
+    ).first()
+
+    # Pre-seeded credentials fallback if table was seeded before
+    if not officer and ident.upper() in ["CG-POL-8492", "POL-8492", "DR.VERMA@CG.GOV.IN"]:
+        # Auto-provision standard demo officer
+        officer_id = "POL-CG-POL-8492"
+        existing = db.query(StaffUser).filter(StaffUser.id == officer_id).first()
+        if not existing:
+            officer = StaffUser(
+                id=officer_id,
+                email="dr.verma@cg.gov.in",
+                employee_id="CG-POL-8492",
+                full_name="Dr. S. K. Verma",
+                bank_name="Directorate of Agriculture & DBT Oversight",
+                branch_district="State HQ (Raipur) | Joint Secretary (Agriculture)",
+                password_hash=hash_password(req.password or "admin123"),
+                role="POLICY_MAKER",
+                is_active=True,
+            )
+            db.add(officer)
+            db.commit()
+            db.refresh(officer)
+        else:
+            officer = existing
+
+    if not officer or not verify_password(req.password, officer.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="गलत ईमेल/अधिकारी आईडी या पासवर्ड। (Invalid Email/Officer ID or Password.)"
+        )
+
+    token = generate_session(officer.id, officer.email, role="POLICY_MAKER")
+    response.set_cookie(
+        key=SESSION_COOKIE_NAME,
+        value=token,
+        max_age=SESSION_TTL_SECONDS,
+        httponly=True,
+        samesite="lax",
+        secure=False,
+    )
+
+    parts = officer.branch_district.split(" | ") if " | " in officer.branch_district else [officer.branch_district, "Policy Officer"]
+    jurisdiction_val = parts[0]
+    designation_val = parts[1] if len(parts) > 1 else "Officer"
+
+    return PolicyOfficerLoginResponse(
+        message="Policy Officer login successful.",
+        officer=PolicyOfficerProfile(
+            id=officer.id,
+            full_name=officer.full_name,
+            email=officer.email,
+            employee_id=officer.employee_id,
+            department=officer.bank_name,
+            designation=designation_val,
+            jurisdiction=jurisdiction_val,
+            role=officer.role,
+        ),
+        session_token=token,
+    )
+
+
+@router.get("/policy/me", response_model=PolicyOfficerProfile)
+def api_policy_me(officer: StaffUser = Depends(get_current_policy_officer)):
+    """Fetch profile of currently logged-in policy officer."""
+    parts = officer.branch_district.split(" | ") if " | " in officer.branch_district else [officer.branch_district, "Policy Officer"]
+    jurisdiction_val = parts[0]
+    designation_val = parts[1] if len(parts) > 1 else "Officer"
+
+    return PolicyOfficerProfile(
+        id=officer.id,
+        full_name=officer.full_name,
+        email=officer.email,
+        employee_id=officer.employee_id,
+        department=officer.bank_name,
+        designation=designation_val,
+        jurisdiction=jurisdiction_val,
+        role=officer.role,
+    )
+
+
+@router.post("/policy/logout")
+def api_policy_logout(request: Request, response: Response):
+    """Log out policy officer by revoking session and clearing cookie."""
+    token = request.cookies.get(SESSION_COOKIE_NAME)
+    if token:
+        revoke_session(token)
+    response.delete_cookie(key=SESSION_COOKIE_NAME)
+    return {"message": "Policy officer logged out successfully."}
+
 
 

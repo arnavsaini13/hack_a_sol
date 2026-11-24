@@ -91,8 +91,8 @@ def api_login_khasra(req: LoginKhasraRequest, response: Response, db: Session = 
         value=token,
         max_age=SESSION_TTL_SECONDS,
         httponly=True,
-        samesite="lax",
-        secure=False,
+        samesite="none",
+        secure=True,
     )
 
     return LoginResponse(
@@ -180,8 +180,8 @@ def api_signup_verify(req: SignupVerifyRequest, response: Response, db: Session 
         value=token,
         max_age=SESSION_TTL_SECONDS,
         httponly=True,
-        samesite="lax",
-        secure=False,
+        samesite="none",
+        secure=True,
     )
 
     return LoginResponse(
@@ -226,8 +226,8 @@ def api_verify_otp(req: VerifyOTPRequest, response: Response, db: Session = Depe
         value=token,
         max_age=SESSION_TTL_SECONDS,
         httponly=True,
-        samesite="lax",
-        secure=False,  # Set to False for local localhost demo
+        samesite="none",
+        secure=True,  # Set to False for local localhost demo
     )
 
     # Record login audit event
@@ -289,8 +289,8 @@ def api_verify_pin(req: VerifyPINRequest, response: Response, db: Session = Depe
         value=token,
         max_age=SESSION_TTL_SECONDS,
         httponly=True,
-        samesite="lax",
-        secure=False,
+        samesite="none",
+        secure=True,
     )
 
     return LoginResponse(
@@ -418,8 +418,8 @@ def api_bank_register(req: BankOfficerRegisterRequest, response: Response, db: S
         value=token,
         max_age=SESSION_TTL_SECONDS,
         httponly=True,
-        samesite="lax",
-        secure=False,
+        samesite="none",
+        secure=True,
     )
 
     return BankOfficerLoginResponse(
@@ -457,8 +457,8 @@ def api_bank_login(req: BankOfficerLoginRequest, response: Response, db: Session
         value=token,
         max_age=SESSION_TTL_SECONDS,
         httponly=True,
-        samesite="lax",
-        secure=False,
+        samesite="none",
+        secure=True,
     )
 
     return BankOfficerLoginResponse(
@@ -530,8 +530,8 @@ def api_policy_register(req: PolicyOfficerRegisterRequest, response: Response, d
         value=token,
         max_age=SESSION_TTL_SECONDS,
         httponly=True,
-        samesite="lax",
-        secure=False,
+        samesite="none",
+        secure=True,
     )
 
     jurisdiction_val = req.jurisdiction.strip()
@@ -597,8 +597,8 @@ def api_policy_login(req: PolicyOfficerLoginRequest, response: Response, db: Ses
         value=token,
         max_age=SESSION_TTL_SECONDS,
         httponly=True,
-        samesite="lax",
-        secure=False,
+        samesite="none",
+        secure=True,
     )
 
     parts = officer.branch_district.split(" | ") if " | " in officer.branch_district else [officer.branch_district, "Policy Officer"]

@@ -11,17 +11,49 @@ import type {
   RulesData,
 } from '../types/models';
 
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
+const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+export const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ||
+  (isLocal ? 'http://localhost:8000' : 'https://hack-a-sol-523b.onrender.com')
+).replace(/\/$/, '');
 const API_BASE = `${API_BASE_URL}/api`;
 
+const TOKEN_KEY = 'agri_session_token';
+
+export function getStoredToken(): string | null {
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredToken(token: string | null) {
+  try {
+    if (token) {
+      localStorage.setItem(TOKEN_KEY, token);
+    } else {
+      localStorage.removeItem(TOKEN_KEY);
+    }
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  const token = getStoredToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...((options.headers as Record<string, string>) || {}),
+  };
+  if (token && !headers['Authorization']) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const res = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    headers,
   });
 
   if (!res.ok) {
@@ -48,17 +80,25 @@ export async function sendOtp(mobile: string) {
 }
 
 export async function verifyOtp(mobile: string, otp: string) {
-  return apiFetch<{ message: string; farmer: any; session_token: string; role: string }>('/auth/verify-otp', {
+  const res = await apiFetch<{ message: string; farmer: any; session_token: string; role: string }>('/auth/verify-otp', {
     method: 'POST',
     body: JSON.stringify({ mobile, otp }),
   });
+  if (res?.session_token) {
+    setStoredToken(res.session_token);
+  }
+  return res;
 }
 
 export async function loginWithKhasra(khasra_no: string, registry_no?: string) {
-  return apiFetch<{ message: string; farmer: any; session_token: string; role: string }>('/auth/login-khasra', {
+  const res = await apiFetch<{ message: string; farmer: any; session_token: string; role: string }>('/auth/login-khasra', {
     method: 'POST',
     body: JSON.stringify({ khasra_no, registry_no }),
   });
+  if (res?.session_token) {
+    setStoredToken(res.session_token);
+  }
+  return res;
 }
 
 export async function signupSendOtp(mobile: string) {
@@ -69,10 +109,14 @@ export async function signupSendOtp(mobile: string) {
 }
 
 export async function signupVerifyOtp(params: { mobile: string; otp: string; khasra_no?: string; name?: string }) {
-  return apiFetch<{ message: string; farmer: any; session_token: string; role: string }>('/auth/signup-verify', {
+  const res = await apiFetch<{ message: string; farmer: any; session_token: string; role: string }>('/auth/signup-verify', {
     method: 'POST',
     body: JSON.stringify(params),
   });
+  if (res?.session_token) {
+    setStoredToken(res.session_token);
+  }
+  return res;
 }
 
 export async function getSession() {
@@ -87,6 +131,7 @@ export async function recordConsent(consent_given: boolean) {
 }
 
 export async function logout() {
+  setStoredToken(null);
   return apiFetch<{ status: string }>('/auth/logout', {
     method: 'POST',
   });
@@ -218,17 +263,25 @@ export async function registerBankOfficer(data: {
   branch_district: string;
   password: string;
 }) {
-  return apiFetch<{ message: string; officer: BankOfficerProfile; session_token: string }>('/v1/auth/bank/register', {
+  const res = await apiFetch<{ message: string; officer: BankOfficerProfile; session_token: string }>('/v1/auth/bank/register', {
     method: 'POST',
     body: JSON.stringify(data),
   });
+  if (res?.session_token) {
+    setStoredToken(res.session_token);
+  }
+  return res;
 }
 
 export async function loginBankOfficer(data: { identifier: string; password: string }) {
-  return apiFetch<{ message: string; officer: BankOfficerProfile; session_token: string }>('/v1/auth/bank/login', {
+  const res = await apiFetch<{ message: string; officer: BankOfficerProfile; session_token: string }>('/v1/auth/bank/login', {
     method: 'POST',
     body: JSON.stringify(data),
   });
+  if (res?.session_token) {
+    setStoredToken(res.session_token);
+  }
+  return res;
 }
 
 export async function getBankOfficerMe() {
@@ -236,6 +289,7 @@ export async function getBankOfficerMe() {
 }
 
 export async function logoutBankOfficer() {
+  setStoredToken(null);
   return apiFetch<{ status: string; message: string }>('/v1/auth/logout', {
     method: 'POST',
   });
@@ -263,17 +317,25 @@ export async function registerPolicyOfficer(data: {
   jurisdiction: string;
   password: string;
 }) {
-  return apiFetch<{ message: string; officer: PolicyOfficerProfile; session_token: string }>('/v1/auth/policy/register', {
+  const res = await apiFetch<{ message: string; officer: PolicyOfficerProfile; session_token: string }>('/v1/auth/policy/register', {
     method: 'POST',
     body: JSON.stringify(data),
   });
+  if (res?.session_token) {
+    setStoredToken(res.session_token);
+  }
+  return res;
 }
 
 export async function loginPolicyOfficer(data: { identifier: string; password: string }) {
-  return apiFetch<{ message: string; officer: PolicyOfficerProfile; session_token: string }>('/v1/auth/policy/login', {
+  const res = await apiFetch<{ message: string; officer: PolicyOfficerProfile; session_token: string }>('/v1/auth/policy/login', {
     method: 'POST',
     body: JSON.stringify(data),
   });
+  if (res?.session_token) {
+    setStoredToken(res.session_token);
+  }
+  return res;
 }
 
 export async function getPolicyOfficerMe() {
@@ -281,6 +343,7 @@ export async function getPolicyOfficerMe() {
 }
 
 export async function logoutPolicyOfficer() {
+  setStoredToken(null);
   return apiFetch<{ message: string }>('/v1/auth/policy/logout', {
     method: 'POST',
   });

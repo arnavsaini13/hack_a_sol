@@ -39,6 +39,15 @@ try {
 
 # 4. Attempt Gradle assembleDebug build
 Write-Host "`n[3/3] Compiling Android APK with Gradle..." -ForegroundColor Cyan
+
+# Auto-detect modern JDK from Android Studio if available
+$androidStudioJbr = "C:\Program Files\Android\Android Studio\jbr"
+if (Test-Path $androidStudioJbr) {
+    $env:JAVA_HOME = $androidStudioJbr
+    $env:PATH = "$androidStudioJbr\bin;$env:PATH"
+    Write-Host "[INFO] Using Android Studio JDK: $androidStudioJbr" -ForegroundColor Gray
+}
+
 $gradlew = "$scriptDir\frontend\android\gradlew.bat"
 $buildSuccess = $false
 

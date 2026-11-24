@@ -64,34 +64,26 @@ default_origins = [
     "http://localhost",
     "https://localhost",
     "capacitor://localhost",
+    "https://janagriportal.vercel.app",
 ]
 
 cors_env = os.getenv("CORS_ORIGINS", "").strip()
+allowed_list = list(default_origins)
+if cors_env and cors_env != "*":
+    for origin in cors_env.split(","):
+        cleaned = origin.strip().rstrip("/")
+        if cleaned and cleaned not in allowed_list:
+            allowed_list.append(cleaned)
 
-if cors_env == "*":
-    # Wildcard mode
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=False,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-else:
-    allowed_list = list(default_origins)
-    if cors_env:
-        for origin in cors_env.split(","):
-            cleaned = origin.strip().rstrip("/")
-            if cleaned and cleaned not in allowed_list:
-                allowed_list.append(cleaned)
-
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=allowed_list,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+# Always allow all web and mobile origins dynamically with full credentials support
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_list,
+    allow_origin_regex=r"^https?://.*$|^capacitor://.*$",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Include Routers
 app.include_router(auth_router.router, prefix="/api/auth")

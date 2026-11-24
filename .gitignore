@@ -13,6 +13,7 @@ dist/
 dist-ssr/
 build/
 *.local
+*.apk
 
 # Python cache & virtual environments
 __pycache__/

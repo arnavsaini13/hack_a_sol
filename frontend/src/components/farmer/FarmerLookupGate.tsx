@@ -62,7 +62,7 @@ export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVeri
   // Mode: 'signin' (Khasra + Phone + Password) or 'signup' (Register + Password)
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
 
-  // Sign-In state (3 Required Fields: Khasra, Phone, Password)
+  // Sign-In state (2 Required Fields: Khasra Unique ID & Password)
   const [signinKhasra, setSigninKhasra] = useState('142/1');
   const [signinPhone, setSigninPhone] = useState('9876543210');
   const [signinPassword, setSigninPassword] = useState('Kisan@2026');
@@ -102,33 +102,22 @@ export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVeri
     setError(null);
   };
 
-  // Execute 3-Field Sign-In
+  // Execute Sign-In using Unique Khasra Number + Password
   const handleSigninSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     const cleanKhasra = signinKhasra.trim();
-    const cleanPhone = signinPhone.trim();
     const cleanPass = signinPassword.trim();
+    const cleanPhone = signinPhone ? signinPhone.trim() : undefined;
 
     if (!cleanKhasra) {
       setError(
         language === 'chh'
-          ? 'कृपया खसरा नंबर लिखव।'
+          ? 'कृपया खसरा नंबर (यूनिक आईडी) लिखव।'
           : language === 'hi'
-          ? 'कृपया खसरा नंबर दर्ज करें।'
-          : 'Please enter Khasra Number.'
-      );
-      return;
-    }
-
-    if (!cleanPhone || !/^[6-9]\d{9}$/.test(cleanPhone)) {
-      setError(
-        language === 'chh'
-          ? 'कृपया वैध 10-अंक के मोबाइल नंबर लिखव।'
-          : language === 'hi'
-          ? 'कृपया वैध 10-अंकीय मोबाइल नंबर दर्ज करें।'
-          : 'Please enter a valid 10-digit mobile number.'
+          ? 'कृपया खसरा क्रमांक (यूनिक आईडी) दर्ज करें।'
+          : 'Please enter Khasra Number (Unique ID).'
       );
       return;
     }
@@ -159,18 +148,18 @@ export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVeri
     try {
       const res = await loginWithKhasra({
         khasra_no: cleanKhasra,
-        phone: cleanPhone,
         password: cleanPass,
+        phone: cleanPhone,
       });
       onFarmerVerified(res.farmer);
     } catch (err: any) {
       setError(
         err.message ||
           (language === 'chh'
-            ? 'लॉगिन विफल: खसरा, फोन नंबर अथवा पासवर्ड गलत हे।'
+            ? 'लॉगिन विफल: खसरा अथवा पासवर्ड गलत हे।'
             : language === 'hi'
-            ? 'साइन इन विफल: खसरा, मोबाइल नंबर अथवा पासवर्ड अमान्य है।'
-            : 'Sign in failed: Khasra, Phone, or Password is incorrect.')
+            ? 'साइन इन विफल: खसरा क्रमांक अथवा पासवर्ड अमान्य है।'
+            : 'Sign in failed: Khasra number or Password is incorrect.')
       );
     } finally {
       setLoading(false);
@@ -390,16 +379,16 @@ export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVeri
                 )}
               </div>
 
-              {/* 1. Khasra Number */}
+              {/* 1. Khasra Number (Unique ID) */}
               <div>
                 <label className="text-xs font-bold text-slate-800 flex items-center justify-between mb-1">
                   <span className="flex items-center gap-1.5">
                     <FileText className="w-3.5 h-3.5 text-emerald-700" />
-                    <span>{language === 'en' ? '1. Khasra Number (खसरा संख्या) *' : '1. खसरा क्रमांक (Khasra No.) *'}</span>
+                    <span>{language === 'en' ? 'Khasra Number (Unique ID) *' : 'खसरा क्रमांक (यूनिक आईडी) *'}</span>
                   </span>
                   <FieldVoiceSpeaker
-                    textHi="कृपया अपनी भूमि का खसरा क्रमांक दर्ज करें।"
-                    textEn="Please enter your land Khasra number."
+                    textHi="कृपया अपनी भूमि का खसरा क्रमांक अथवा यूनिक आईडी दर्ज करें।"
+                    textEn="Please enter your land Khasra number or unique ID."
                   />
                 </label>
                 <div className="relative">
@@ -415,29 +404,12 @@ export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVeri
                 </div>
               </div>
 
-              {/* 2. Registered Phone Number */}
-              <div>
-                <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5 mb-1">
-                  <Phone className="w-3.5 h-3.5 text-emerald-700" />
-                  <span>{language === 'en' ? '2. Registered Mobile Number *' : '2. पंजीकृत मोबाइल नंबर *'}</span>
-                </label>
-                <input
-                  type="tel"
-                  required
-                  maxLength={10}
-                  value={signinPhone}
-                  onChange={(e) => setSigninPhone(e.target.value.replace(/\D/g, ''))}
-                  placeholder="9876543210"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:border-emerald-600 focus:outline-none font-mono"
-                />
-              </div>
-
-              {/* 3. Password with Show/Hide Toggle */}
+              {/* 2. Password with Show/Hide Toggle */}
               <div>
                 <label className="text-xs font-bold text-slate-800 flex items-center justify-between mb-1">
                   <span className="flex items-center gap-1.5">
                     <Lock className="w-3.5 h-3.5 text-emerald-700" />
-                    <span>{language === 'en' ? '3. Password (Argon2 Hashed) *' : '3. पासवर्ड (Password) *'}</span>
+                    <span>{language === 'en' ? 'Password (पंजीकृत पासवर्ड) *' : 'पासवर्ड (Password) *'}</span>
                   </span>
                   <button
                     type="button"

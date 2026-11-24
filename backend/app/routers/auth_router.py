@@ -67,42 +67,61 @@ def api_send_otp(req: SendOTPRequest):
 
 @router.post("/login-khasra", response_model=LoginResponse)
 def api_login_khasra(req: LoginKhasraRequest, request: Request, response: Response, db: Session = Depends(get_db)):
-    """Authenticate farmer requiring ALL 3 fields: Khasra Number, Phone Number, and Password."""
+    """Authenticate farmer using Khasra Number and Password (unique farmer login)."""
     clean_khasra = (req.khasra_no or "").strip()
     phone_val = (req.phone or req.mobile or "").strip()
     password_val = (req.password or "").strip()
 
-    if not clean_khasra or not phone_val or not password_val:
+    if not clean_khasra or not password_val:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="खसरा नंबर, मोबाइल नंबर और पासवर्ड तीनों अनिवार्य हैं। (Khasra number, phone number, and password are all required.)"
+            detail="खसरा नंबर और पासवर्ड दोनों अनिवार्य हैं। (Khasra number and password are required.)"
         )
 
-    # 1. Match farmer by phone / mobile
-    farmer = db.query(Farmer).filter((Farmer.mobile == phone_val) | (Farmer.phone == phone_val)).first()
+    farmer = None
+
+    # 1. If phone was also provided, try matching by phone first
+    if phone_val:
+        farmer_by_phone = db.query(Farmer).filter((Farmer.mobile == phone_val) | (Farmer.phone == phone_val)).first()
+        if farmer_by_phone:
+            # Verify khasra matches this farmer
+            khasra_matches = False
+            if farmer_by_phone.khasra_no and (farmer_by_phone.khasra_no.strip() == clean_khasra or clean_khasra in farmer_by_phone.khasra_no.strip()):
+                khasra_matches = True
+            elif farmer_by_phone.id == clean_khasra or farmer_by_phone.id == f"CG-{clean_khasra}":
+                khasra_matches = True
+            else:
+                for p in farmer_by_phone.parcels:
+                    if p.khasra_no and (p.khasra_no.strip() == clean_khasra or clean_khasra in p.khasra_no.strip()):
+                        khasra_matches = True
+                        break
+            if khasra_matches:
+                farmer = farmer_by_phone
+
+    # 2. If not found by phone, locate farmer directly by unique Khasra Number
+    if not farmer:
+        # Check by farmer.khasra_no or farmer.id
+        farmer = db.query(Farmer).filter((Farmer.khasra_no == clean_khasra) | (Farmer.id == clean_khasra) | (Farmer.id == f"CG-{clean_khasra}")).first()
+
+    # 3. Check by LandParcel khasra_no
+    if not farmer:
+        parcel = db.query(LandParcel).filter(LandParcel.khasra_no == clean_khasra).first()
+        if parcel:
+            farmer = db.query(Farmer).filter(Farmer.id == parcel.farmer_id).first()
+
+    # 4. Partial khasra match fallback
+    if not farmer:
+        parcel = db.query(LandParcel).filter(LandParcel.khasra_no.like(f"%{clean_khasra}%")).first()
+        if parcel:
+            farmer = db.query(Farmer).filter(Farmer.id == parcel.farmer_id).first()
+
     if not farmer:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="अमान्य क्रेडेंशियल्स: यह फोन नंबर पंजीकृत नहीं है। (Invalid credentials: phone number not registered.)"
+            detail="अमान्य क्रेडेंशियल्स: खसरा नंबर दर्ज नहीं है या रिकॉर्ड नहीं मिला। (Invalid credentials: Khasra number not found.)"
         )
 
-    # 2. Match khasra_no against farmer record or their land parcels
-    khasra_matches = False
-    if farmer.khasra_no and (farmer.khasra_no.strip() == clean_khasra or clean_khasra in farmer.khasra_no.strip()):
-        khasra_matches = True
-    else:
-        for p in farmer.parcels:
-            if p.khasra_no and (p.khasra_no.strip() == clean_khasra or clean_khasra in p.khasra_no.strip()):
-                khasra_matches = True
-                break
-
-    if not khasra_matches:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="खसरा नंबर इस फोन नंबर के रिकॉर्ड से मेल नहीं खाता। (Khasra number does not match registered farmer land records.)"
-        )
-
-    # 3. Verify password against password_hash using Argon2
+    # 5. Verify password against password_hash using Argon2
     if not farmer.password_hash:
         if password_val == "Kisan@2026":
             farmer.password_hash = hash_password(password_val)

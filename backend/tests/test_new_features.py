@@ -13,6 +13,18 @@ def test_khasra_login():
     assert data["farmer"]["name_hi"] == "रामेश्वर पटेल"
     assert "session_token" in data
 
+def test_khasra_only_login():
+    # 2-field Login: Unique Khasra Number + Password (no phone required on subsequent logins)
+    res = client.post("/api/auth/login-khasra", json={"khasra_no": "142/1", "password": "Kisan@2026"})
+    assert res.status_code == 200, res.text
+    data = res.json()
+    assert data["farmer"]["id"] == "F-001"
+    assert "session_token" in data
+
+    # Test wrong password fails with 401
+    res_bad = client.post("/api/auth/login-khasra", json={"khasra_no": "142/1", "password": "WrongPassword"})
+    assert res_bad.status_code == 401
+
 def test_signup_otp_and_verify():
     # Step 1: Send OTP to new mobile
     test_mobile = "9823456789"

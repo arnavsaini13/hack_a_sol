@@ -35,9 +35,11 @@ if "[YOUR-DATABASE-PASSWORD]" in raw_url or "[YOUR-PASSWORD]" in raw_url:
     raw_url = DEFAULT_SQLITE_URL
 
 # Normalize Supabase/PostgreSQL scheme for SQLAlchemy + psycopg2
-# Supabase provides URIs beginning with "postgres://", but SQLAlchemy requires "postgresql://"
+# Supabase provides URIs beginning with "postgres://" or "postgresql://"
 if raw_url.startswith("postgres://"):
-    raw_url = raw_url.replace("postgres://", "postgresql://", 1)
+    raw_url = raw_url.replace("postgres://", "postgresql+psycopg2://", 1)
+elif raw_url.startswith("postgresql://") and not raw_url.startswith("postgresql+"):
+    raw_url = raw_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 
 def _build_engine(url: str):
     is_sqlite = url.startswith("sqlite")
@@ -53,7 +55,13 @@ def _build_engine(url: str):
             "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", "20")),
             "pool_pre_ping": True,
         })
-    return create_engine(url, connect_args=c_args, **kwargs), is_sqlite, is_postgres
+    try:
+        eng = create_engine(url, connect_args=c_args, **kwargs)
+        return eng, is_sqlite, is_postgres
+    except Exception as exc:
+        print(f"[WARN] Failed to create database engine for '{url}' ({exc}). Falling back to SQLite.")
+        fallback_args = {"check_same_thread": False}
+        return create_engine(DEFAULT_SQLITE_URL, connect_args=fallback_args, echo=False), True, False
 
 DATABASE_URL = raw_url
 engine, IS_SQLITE, IS_POSTGRES = _build_engine(DATABASE_URL)

@@ -18,8 +18,8 @@ def client():
 
 
 def test_farmer_banker_loan_bridge(client):
-    # 1. Login as demo farmer (Ramesh Patel F-001) via Khasra
-    khasra_res = client.post("/api/v1/auth/login-khasra", json={"khasra_no": "142/1"})
+    # 1. Login as demo farmer (Ramesh Patel F-001) via Khasra + Phone + Password
+    khasra_res = client.post("/api/v1/auth/login-khasra", json={"khasra_no": "142/1", "phone": "9876543210", "password": "Kisan@2026"})
     assert khasra_res.status_code == 200
     farmer_data = khasra_res.json()["farmer"]
     assert "Ramesh" in farmer_data["name_en"]
@@ -80,7 +80,7 @@ def test_farmer_banker_loan_bridge(client):
 
     # 6. Farmer re-checks My Loans - should see REJECT with the exact reason!
     # Re-login or use farmer session
-    client.post("/api/v1/auth/login-khasra", json={"khasra_no": "142/1"})
+    client.post("/api/v1/auth/login-khasra", json={"khasra_no": "142/1", "phone": "9876543210", "password": "Kisan@2026"})
     loans_res2 = client.get("/api/farmer/loans")
     assert loans_res2.status_code == 200
     apps2 = loans_res2.json()["applications"]

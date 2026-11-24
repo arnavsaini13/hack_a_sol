@@ -90,10 +90,24 @@ export async function verifyOtp(mobile: string, otp: string) {
   return res;
 }
 
-export async function loginWithKhasra(khasra_no: string, registry_no?: string) {
+export async function loginWithKhasra(
+  khasraOrParams: string | { khasra_no: string; phone?: string; password?: string; registry_no?: string },
+  legacyRegistryNo?: string,
+  legacyPhone?: string,
+  legacyPassword?: string
+) {
+  const bodyObj = typeof khasraOrParams === 'string'
+    ? {
+        khasra_no: khasraOrParams,
+        registry_no: legacyRegistryNo,
+        phone: legacyPhone || '9876543210',
+        password: legacyPassword || 'Kisan@2026',
+      }
+    : khasraOrParams;
+
   const res = await apiFetch<{ message: string; farmer: any; session_token: string; role: string }>('/auth/login-khasra', {
     method: 'POST',
-    body: JSON.stringify({ khasra_no, registry_no }),
+    body: JSON.stringify(bodyObj),
   });
   if (res?.session_token) {
     setStoredToken(res.session_token);
@@ -111,6 +125,7 @@ export async function signupSendOtp(mobile: string) {
 export async function signupVerifyOtp(params: {
   mobile: string;
   otp: string;
+  password?: string;
   khasra_no?: string;
   name?: string;
   father_name?: string;

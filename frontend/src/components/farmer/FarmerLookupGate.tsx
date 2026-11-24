@@ -14,7 +14,12 @@ import {
   User,
   MapPin,
   Layers,
-  Lock
+  Lock,
+  Eye,
+  EyeOff,
+  Sparkles,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { loginWithKhasra, signupSendOtp, signupVerifyOtp } from '../../services/api';
 import { useTranslation } from '../../i18n';
@@ -43,15 +48,29 @@ const CG_DISTRICTS = [
   'बस्तर (Bastar)',
 ];
 
+const DEMO_PERSONAS = [
+  { id: 'F-001', name: 'रामेश्वर पटेल (Ramesh Patel)', khasra: '142/1', phone: '9876543210', district: 'रायपुर', password: 'Kisan@2026', desc: 'Golden Clean Case' },
+  { id: 'F-002', name: 'श्याम वर्मा (Shyam Verma)', khasra: '88/2', phone: '9876543211', district: 'दुर्ग', password: 'Kisan@2026', desc: 'Multi-Parcel' },
+  { id: 'F-003', name: 'अनिता बाई (Anita Bai)', khasra: '504', phone: '9876543212', district: 'बिलासपुर', password: 'Kisan@2026', desc: 'Marginal Farmer' },
+  { id: 'F-004', name: 'विक्रम सिंह (Vikram Singh)', khasra: '45/2', phone: '9876543213', district: 'राजनांदगांव', password: 'Kisan@2026', desc: 'Amber Fuzzy Match' },
+  { id: 'F-005', name: 'दिलीप कुमार (Dilip Kumar)', khasra: '77/1', phone: '9876543214', district: 'महासमुंद', password: 'Kisan@2026', desc: 'Duplicate KCC Mortgaged' },
+];
+
 export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVerified }) => {
   const { t, language } = useTranslation();
 
-  // Mode: 'lookup' (Khasra / Reg ID) or 'signup' (Phone + Full Registration)
-  const [authMode, setAuthMode] = useState<'lookup' | 'signup'>('lookup');
+  // Mode: 'signin' (Khasra + Phone + Password) or 'signup' (Register + Password)
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
 
-  // Lookup state
-  const [lookupValue, setLookupValue] = useState('');
+  // Sign-In state (3 Required Fields: Khasra, Phone, Password)
+  const [signinKhasra, setSigninKhasra] = useState('142/1');
+  const [signinPhone, setSigninPhone] = useState('9876543210');
+  const [signinPassword, setSigninPassword] = useState('Kisan@2026');
+  const [showSigninPassword, setShowSigninPassword] = useState(false);
+  const [showDemoQuickFill, setShowDemoQuickFill] = useState(false);
   const [consentChecked, setConsentChecked] = useState(true);
+
+  // Common loading / error state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,23 +85,61 @@ export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVeri
   const [signupVillage, setSignupVillage] = useState('अभनपुर');
   const [signupKhasra, setSignupKhasra] = useState('142/1');
   const [signupAreaAcres, setSignupAreaAcres] = useState('4.00');
+  const [signupPassword, setSignupPassword] = useState('');
+  const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [signupConsent, setSignupConsent] = useState(true);
 
   // OTP State
   const [signupOtp, setSignupOtp] = useState('');
   const [incomingSmsOtp, setIncomingSmsOtp] = useState<string | null>(null);
 
-  // Execute lookup
-  const executeLookup = async (inputStr: string) => {
+  // Quick fill helper for judges & reviewers
+  const handleSelectDemoPersona = (p: typeof DEMO_PERSONAS[0]) => {
+    setSigninKhasra(p.khasra);
+    setSigninPhone(p.phone);
+    setSigninPassword(p.password);
     setError(null);
-    const cleaned = inputStr.trim();
-    if (!cleaned) {
+  };
+
+  // Execute 3-Field Sign-In
+  const handleSigninSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    const cleanKhasra = signinKhasra.trim();
+    const cleanPhone = signinPhone.trim();
+    const cleanPass = signinPassword.trim();
+
+    if (!cleanKhasra) {
       setError(
         language === 'chh'
-          ? 'कृपया खसरा नंबर या किसान पंजीयन नंबर दर्ज करव।'
+          ? 'कृपया खसरा नंबर लिखव।'
           : language === 'hi'
-          ? 'कृपया खसरा नंबर अथवा पंजीयन क्रमांक दर्ज करें।'
-          : 'Please enter Khasra Number or Farmer Registration Number.'
+          ? 'कृपया खसरा नंबर दर्ज करें।'
+          : 'Please enter Khasra Number.'
+      );
+      return;
+    }
+
+    if (!cleanPhone || !/^[6-9]\d{9}$/.test(cleanPhone)) {
+      setError(
+        language === 'chh'
+          ? 'कृपया वैध 10-अंक के मोबाइल नंबर लिखव।'
+          : language === 'hi'
+          ? 'कृपया वैध 10-अंकीय मोबाइल नंबर दर्ज करें।'
+          : 'Please enter a valid 10-digit mobile number.'
+      );
+      return;
+    }
+
+    if (!cleanPass) {
+      setError(
+        language === 'chh'
+          ? 'कृपया अपन पासवर्ड दर्ज करव।'
+          : language === 'hi'
+          ? 'कृपया अपना पासवर्ड दर्ज करें।'
+          : 'Please enter your password.'
       );
       return;
     }
@@ -93,38 +150,31 @@ export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVeri
           ? 'रिकॉर्ड देखे बर सहमति चेकबॉक्स म टिक करव।'
           : language === 'hi'
           ? 'कृपया रिकॉर्ड प्राप्त करने हेतु सहमति चेकबॉक्स पर टिक करें।'
-          : 'Please check the consent box to fetch records.'
+          : 'Please check the consent box to proceed.'
       );
       return;
     }
 
     setLoading(true);
     try {
-      let regId = cleaned.replace(/^CG-/, '');
-      let khasraParam = cleaned;
-      if (cleaned.toUpperCase().includes('CG-F') || cleaned.toUpperCase().startsWith('F-')) {
-        khasraParam = '';
-      }
-
-      const res = await loginWithKhasra(khasraParam || '142/1', regId || undefined);
+      const res = await loginWithKhasra({
+        khasra_no: cleanKhasra,
+        phone: cleanPhone,
+        password: cleanPass,
+      });
       onFarmerVerified(res.farmer);
     } catch (err: any) {
       setError(
         err.message ||
           (language === 'chh'
-            ? 'रिकॉर्ड नइ मिलीस। अपन खसरा नंबर फिर ले जाँचव।'
+            ? 'लॉगिन विफल: खसरा, फोन नंबर अथवा पासवर्ड गलत हे।'
             : language === 'hi'
-            ? 'रिकॉर्ड नहीं मिला। कृपया खसरा संख्या पुनः जांचें।'
-            : 'Record not found. Please verify your Khasra number.')
+            ? 'साइन इन विफल: खसरा, मोबाइल नंबर अथवा पासवर्ड अमान्य है।'
+            : 'Sign in failed: Khasra, Phone, or Password is incorrect.')
       );
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleLookupSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    executeLookup(lookupValue);
   };
 
   // Signup Step 1: Validate Details & Request OTP
@@ -152,6 +202,22 @@ export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVeri
       setError(language === 'en' ? 'Please enter land Khasra Number.' : 'कृपया खसरा क्रमांक दर्ज करें।');
       return;
     }
+    if (!signupPassword || signupPassword.length < 6) {
+      setError(
+        language === 'en'
+          ? 'Password must be at least 6 characters long.'
+          : 'पासवर्ड कम से कम 6 अक्षरों का होना चाहिए।'
+      );
+      return;
+    }
+    if (signupPassword !== signupConfirmPassword) {
+      setError(
+        language === 'en'
+          ? 'Passwords do not match. Please re-check.'
+          : 'दोनों पासवर्ड मेल नहीं खाते। कृपया पुनः जांचें।'
+      );
+      return;
+    }
     if (!signupConsent) {
       setError(language === 'en' ? 'Please accept DPDP Act consent.' : 'कृपया डेटा उपयोग हेतु सहमति दें (DPDP Act).');
       return;
@@ -169,7 +235,7 @@ export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVeri
     }
   };
 
-  // Signup Step 2: Verify OTP & Register
+  // Signup Step 2: Verify OTP & Complete Registration
   const handleSignupVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -183,6 +249,7 @@ export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVeri
       const res = await signupVerifyOtp({
         mobile: signupPhone.trim(),
         otp: signupOtp.trim(),
+        password: signupPassword.trim(),
         name: signupName.trim(),
         father_name: signupFatherName.trim(),
         district: cleanedDistrict,
@@ -212,53 +279,56 @@ export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVeri
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
               <span>
-                {language === 'chh' ? 'किसान पहचान एवं सत्यापन गेट' : language === 'hi' ? 'किसान पहचान एवं सत्यापन गेट' : 'Farmer Identification & Verification Gate'}
+                {language === 'chh' ? 'किसान पहचान एवं सत्यापन गेट' : language === 'hi' ? 'किसान पहचान एवं सत्यापन गेट' : 'Farmer Identification & Security Gate'}
               </span>
             </span>
 
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              {authMode === 'lookup'
-                ? (language === 'chh' ? 'किसान रिकॉर्ड खोजव' : language === 'hi' ? 'किसान रिकॉर्ड खोजें' : 'Farmer Record Lookup')
-                : (language === 'chh' ? 'नवा किसान अधिकृत पंजीयन (Sign Up)' : language === 'hi' ? 'नया किसान अधिकृत पंजीकरण (Sign Up)' : 'Farmer Official Registration')}
+              {authMode === 'signin'
+                ? (language === 'chh' ? 'किसान लॉगिन / प्रवेश' : language === 'hi' ? 'किसान साइन इन / प्रवेश' : 'Farmer Sign-In')
+                : (language === 'chh' ? 'नवा किसान अधिकृत पंजीयन' : language === 'hi' ? 'नया किसान अधिकृत पंजीकरण' : 'New Farmer Registration')}
             </h2>
 
             <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto">
-              {authMode === 'lookup'
+              {authMode === 'signin'
                 ? (language === 'chh'
-                    ? 'अपन भुइयां के खसरा नंबर या किसान कोड दर्ज कर अपन सबो अधिकार अउ डीबीटी स्थिति जानव।'
+                    ? 'अपन खसरा नंबर, मोबाइल नंबर अउ पासवर्ड डाल के सुरक्षित प्रवेश करव।'
                     : language === 'hi'
-                    ? 'अपनी भूमि का खसरा नंबर अथवा किसान कोड दर्ज कर अपने सभी अधिकार एवं डीबीटी स्थिति जानें।'
-                    : 'Enter your land Khasra Number or Farmer Registration Code to verify statutory entitlements.')
+                    ? 'अपने खसरा नंबर, पंजीकृत मोबाइल नंबर एवं पासवर्ड द्वारा सुरक्षित प्रवेश करें।'
+                    : 'Sign in securely with your verified Khasra, Phone, and Argon2 Password.')
                 : (language === 'chh'
-                    ? 'असली किसान विवरण (नाम, आधार ४ अंक, मोबाइल, खसरा अउ रकबा) भर के सुरक्षित खाता बनावव।'
+                    ? 'अपन पूरा विवरण, खसरा अउ नवा पासवर्ड बना के सुरक्षित खाता बनावव।'
                     : language === 'hi'
-                    ? 'वास्तविक किसान विवरण (नाम, आधार 4 अंक, मोबाइल, खसरा व रकबा) दर्ज कर सुरक्षित खाता बनाएं।'
-                    : 'Register with authentic farmer credentials: Legal Name, Aadhaar last 4, Land Khasra & Acreage.')}
+                    ? 'अपना पूरा विवरण, खसरा एवं पासवर्ड बनाकर सुरक्षित खाता बनाएं।'
+                    : 'Register with authentic farmer details: Legal Name, Land Khasra, Phone & Password.')}
             </p>
           </div>
 
           {/* SMS Notification Banner for Signup OTP */}
           {incomingSmsOtp && authMode === 'signup' && (
-            <div className="p-3.5 rounded-2xl bg-blue-50 border-2 border-blue-400 text-blue-950 text-xs shadow-sm flex items-start gap-2.5 animate-bounce">
+            <div className="p-4 rounded-2xl bg-blue-50 border-2 border-blue-400 text-blue-950 text-xs shadow-sm flex items-start gap-3 animate-in fade-in">
               <BellRing className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-              <div>
-                <span className="font-bold block">
+              <div className="space-y-1">
+                <span className="font-bold block text-sm">
                   📩 {language === 'en' ? 'Govt-OTP SMS Received:' : 'शासकीय एसएमएस अलर्ट [Govt-OTP]:'}
                 </span>
-                <span>
+                <p>
                   {language === 'chh'
                     ? 'कृषि पारदर्शिता पोर्टल सत्यापन कोड: '
                     : language === 'hi'
                     ? 'कृषि पारदर्शिता पोर्टल सत्यापन कोड: '
                     : 'JanAgriPortal verification OTP: '}
-                  <strong className="text-sm font-mono text-blue-900 bg-blue-200/80 px-2 py-0.5 rounded tracking-widest">
+                  <strong className="text-sm font-mono text-blue-900 bg-blue-200/80 px-2 py-0.5 rounded tracking-widest ml-1">
                     {incomingSmsOtp}
                   </strong>
-                </span>
+                </p>
+                <div className="text-[11px] text-blue-700 font-medium">
+                  <em>{language === 'en' ? 'Demo OTP — live SMS gateway enabled upon TRAI DLT registration' : 'डेमो ओटीपी — ट्राई (TRAI) डीएलटी पंजीयन उपरांत लाइव एसएमएस गेटवे सक्रिय'}</em>
+                </div>
                 <button
                   type="button"
                   onClick={() => setSignupOtp(incomingSmsOtp)}
-                  className="block text-xs font-bold text-blue-700 underline mt-1 cursor-pointer"
+                  className="inline-block text-xs font-bold text-blue-800 underline mt-1 cursor-pointer hover:text-blue-950"
                 >
                   {language === 'chh' ? 'कोड अपने-आप भरव (Auto-Fill)' : language === 'hi' ? 'कोड स्वतः भरें (Auto-Fill)' : 'Auto-Fill Code'}
                 </button>
@@ -268,60 +338,137 @@ export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVeri
 
           {/* Error Banner */}
           {error && (
-            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-300 text-rose-800 text-xs font-medium flex items-center gap-2">
+            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-300 text-rose-800 text-xs font-medium flex items-center gap-2 animate-in fade-in">
               <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
-          {/* ── MODE 1: LOOKUP FORM ─────────────────────────────────── */}
-          {authMode === 'lookup' && (
-            <form onSubmit={handleLookupSubmit} className="space-y-5">
-              {/* Khasra / Reg Input */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                    <FileText className="w-4 h-4 text-emerald-700" />
-                    <span>
-                      {language === 'chh'
-                        ? 'खसरा नंबर या किसान पंजीयन संख्या *'
-                        : language === 'hi'
-                        ? 'खसरा नंबर अथवा किसान पंजीयन क्रमांक *'
-                        : 'Khasra Number OR Farmer Registration No. *'}
-                    </span>
-                  </label>
-                  <FieldVoiceSpeaker
-                    textHi="कृपया अपनी भूमि का खसरा क्रमांक अथवा किसान पंजीयन क्रमांक दर्ज करें।"
-                    textEn="Please enter your land Khasra number or farmer registration number."
-                  />
-                </div>
+          {/* ── MODE 1: 3-FIELD SIGN-IN FORM ─────────────────────────── */}
+          {authMode === 'signin' && (
+            <form onSubmit={handleSigninSubmit} className="space-y-4">
+              {/* Collapsible Demo Persona Quick-Fill */}
+              <div className="border border-emerald-200 bg-emerald-50/60 rounded-2xl overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setShowDemoQuickFill(!showDemoQuickFill)}
+                  className="w-full px-4 py-2.5 flex items-center justify-between text-xs font-bold text-emerald-900 hover:bg-emerald-100/50 transition-colors cursor-pointer"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                    <span>{language === 'en' ? 'Demo Persona Quick-Fill (Judges / Reviewers)' : 'डेमो किसान त्वरित चयन (Judges Quick-Fill)'}</span>
+                  </span>
+                  {showDemoQuickFill ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
 
+                {showDemoQuickFill && (
+                  <div className="p-3 border-t border-emerald-200/60 bg-white grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    {DEMO_PERSONAS.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => handleSelectDemoPersona(p)}
+                        className={`p-2.5 text-left rounded-xl border transition-all cursor-pointer ${
+                          signinKhasra === p.khasra && signinPhone === p.phone
+                            ? 'border-emerald-600 bg-emerald-50 text-emerald-950 font-bold'
+                            : 'border-slate-200 hover:border-emerald-300 hover:bg-slate-50 text-slate-800'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between font-bold text-[12px]">
+                          <span>{p.name}</span>
+                          <span className="text-[10px] font-mono bg-slate-100 px-1.5 py-0.2 rounded text-slate-600">{p.id}</span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 mt-0.5">
+                          खसरा: <strong className="text-slate-700">{p.khasra}</strong> • मो: <strong className="text-slate-700">{p.phone}</strong>
+                        </div>
+                        <div className="text-[10px] text-emerald-700 mt-0.5">
+                          {p.desc}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 1. Khasra Number */}
+              <div>
+                <label className="text-xs font-bold text-slate-800 flex items-center justify-between mb-1">
+                  <span className="flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-emerald-700" />
+                    <span>{language === 'en' ? '1. Khasra Number (खसरा संख्या) *' : '1. खसरा क्रमांक (Khasra No.) *'}</span>
+                  </span>
+                  <FieldVoiceSpeaker
+                    textHi="कृपया अपनी भूमि का खसरा क्रमांक दर्ज करें।"
+                    textEn="Please enter your land Khasra number."
+                  />
+                </label>
                 <div className="relative">
                   <input
                     type="text"
                     required
-                    value={lookupValue}
-                    onChange={(e) => setLookupValue(e.target.value)}
-                    placeholder={
-                      language === 'en'
-                        ? 'e.g. 142/1 or F-001 / CG-F001'
-                        : 'उदा. 142/1 अथवा F-001 / CG-F001'
-                    }
-                    className="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-white text-sm font-bold text-slate-900 placeholder-slate-400 focus:border-emerald-600 focus:outline-none transition-all"
+                    value={signinKhasra}
+                    onChange={(e) => setSigninKhasra(e.target.value)}
+                    placeholder="e.g. 142/1"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:border-emerald-600 focus:outline-none"
                   />
-                  <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-3.5" />
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-3" />
                 </div>
               </div>
 
-              {/* DPDP Consent Checkbox */}
-              <label className="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200 cursor-pointer select-none">
+              {/* 2. Registered Phone Number */}
+              <div>
+                <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5 mb-1">
+                  <Phone className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>{language === 'en' ? '2. Registered Mobile Number *' : '2. पंजीकृत मोबाइल नंबर *'}</span>
+                </label>
+                <input
+                  type="tel"
+                  required
+                  maxLength={10}
+                  value={signinPhone}
+                  onChange={(e) => setSigninPhone(e.target.value.replace(/\D/g, ''))}
+                  placeholder="9876543210"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:border-emerald-600 focus:outline-none font-mono"
+                />
+              </div>
+
+              {/* 3. Password with Show/Hide Toggle */}
+              <div>
+                <label className="text-xs font-bold text-slate-800 flex items-center justify-between mb-1">
+                  <span className="flex items-center gap-1.5">
+                    <Lock className="w-3.5 h-3.5 text-emerald-700" />
+                    <span>{language === 'en' ? '3. Password (Argon2 Hashed) *' : '3. पासवर्ड (Password) *'}</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowSigninPassword(!showSigninPassword)}
+                    className="text-[11px] text-slate-500 hover:text-emerald-700 flex items-center gap-1 cursor-pointer"
+                  >
+                    {showSigninPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                    <span>{showSigninPassword ? (language === 'en' ? 'Hide' : 'छिपाएं') : (language === 'en' ? 'Show' : 'दिखाएं')}</span>
+                  </button>
+                </label>
+                <div className="relative">
+                  <input
+                    type={showSigninPassword ? 'text' : 'password'}
+                    required
+                    value={signinPassword}
+                    onChange={(e) => setSigninPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:border-emerald-600 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* DPDP Consent */}
+              <label className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer text-xs text-slate-700 select-none">
                 <input
                   type="checkbox"
                   checked={consentChecked}
                   onChange={(e) => setConsentChecked(e.target.checked)}
                   className="mt-0.5 w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                 />
-                <span className="text-xs text-slate-700 leading-relaxed">
+                <span className="leading-relaxed">
                   {language === 'chh'
                     ? 'मोर भुइयां, करजा, एमएसपी अउ बीमा रिकॉर्ड देख के पारदर्शिता जांच करे बर अनुमति हे (DPDP Act 2023).'
                     : language === 'hi'
@@ -338,8 +485,8 @@ export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVeri
               >
                 <span>
                   {loading
-                    ? (language === 'chh' ? 'रिकॉर्ड लोड होवत हे...' : language === 'hi' ? 'रिकॉर्ड लोड हो रहा है...' : 'Fetching Records...')
-                    : (language === 'chh' ? 'मोर हक जानव' : language === 'hi' ? 'मेरा हक जानें' : 'Check My Entitlements')}
+                    ? (language === 'chh' ? 'सत्यापन होवत हे...' : language === 'hi' ? 'सत्यापन हो रहा है...' : 'Authenticating...')
+                    : (language === 'chh' ? 'साइन इन करव / मोर हक जानव' : language === 'hi' ? 'साइन इन करें / मेरा हक जानें' : 'Sign In & Check Entitlements')}
                 </span>
                 <ArrowRight className="w-4 h-4" />
               </button>
@@ -364,12 +511,12 @@ export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVeri
             </form>
           )}
 
-          {/* ── MODE 2: REAL FARMER SIGNUP FORM ─────────────────────── */}
+          {/* ── MODE 2: SIGNUP FORM WITH PASSWORD CREATION ───────────── */}
           {authMode === 'signup' && (
             <div className="space-y-4">
               {signupStep === 'details' ? (
                 <form onSubmit={handleSignupSendOtp} className="space-y-4">
-                  {/* Two-Column Grid for Realistic Demographics */}
+                  {/* Two-Column Grid for Demographics */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     {/* Full Name */}
                     <div>
@@ -442,6 +589,39 @@ export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVeri
                       />
                     </div>
 
+                    {/* Khasra No (Required) */}
+                    <div>
+                      <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5 mb-1">
+                        <FileText className="w-3.5 h-3.5 text-emerald-700" />
+                        <span>{language === 'en' ? 'Khasra Number (खसरा) *' : 'खसरा क्रमांक *'}</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="उदा. 142/1 अथवा 205/3"
+                        value={signupKhasra}
+                        onChange={(e) => setSignupKhasra(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:border-emerald-600 focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Land Area in Acres */}
+                    <div>
+                      <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5 mb-1">
+                        <Layers className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>{language === 'en' ? 'Land Area (in Acres / एकड़) *' : 'कुल भू-रकबा (एकड़ में) *'}</span>
+                      </label>
+                      <input
+                        type="number"
+                        step="0.05"
+                        required
+                        placeholder="उदा. 4.00"
+                        value={signupAreaAcres}
+                        onChange={(e) => setSignupAreaAcres(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:border-emerald-600 focus:outline-none"
+                      />
+                    </div>
+
                     {/* District */}
                     <div>
                       <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5 mb-1">
@@ -473,12 +653,12 @@ export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVeri
                         placeholder="आरंग / पाटन / धमतरी"
                         value={signupTehsil}
                         onChange={(e) => setSignupTehsil(e.target.value)}
-                        className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:border-emerald-600 focus:outline-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:border-emerald-600 focus:outline-none"
                       />
                     </div>
 
                     {/* Village */}
-                    <div>
+                    <div className="sm:col-span-2">
                       <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5 mb-1">
                         <MapPin className="w-3.5 h-3.5 text-emerald-700" />
                         <span>{language === 'en' ? 'Village / Gram Panchayat *' : 'ग्राम / ग्राम पंचायत *'}</span>
@@ -489,51 +669,62 @@ export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVeri
                         placeholder="उदा. अभनपुर / जामगांव"
                         value={signupVillage}
                         onChange={(e) => setSignupVillage(e.target.value)}
-                        className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:border-emerald-600 focus:outline-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:border-emerald-600 focus:outline-none"
                       />
                     </div>
 
-                    {/* Khasra No */}
+                    {/* Create Password */}
+                    <div>
+                      <label className="text-xs font-bold text-slate-800 flex items-center justify-between mb-1">
+                        <span className="flex items-center gap-1.5">
+                          <Lock className="w-3.5 h-3.5 text-emerald-700" />
+                          <span>{language === 'en' ? 'Create Password *' : 'पासवर्ड बनाएं *'}</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowSignupPassword(!showSignupPassword)}
+                          className="text-[11px] text-slate-500 hover:text-emerald-700 flex items-center gap-1 cursor-pointer"
+                        >
+                          {showSignupPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                          <span>{showSignupPassword ? (language === 'en' ? 'Hide' : 'छिपाएं') : (language === 'en' ? 'Show' : 'दिखाएं')}</span>
+                        </button>
+                      </label>
+                      <input
+                        type={showSignupPassword ? 'text' : 'password'}
+                        required
+                        minLength={6}
+                        placeholder="कम से कम 6 अक्षर"
+                        value={signupPassword}
+                        onChange={(e) => setSignupPassword(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:border-emerald-600 focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Confirm Password */}
                     <div>
                       <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5 mb-1">
-                        <FileText className="w-3.5 h-3.5 text-emerald-700" />
-                        <span>{language === 'en' ? 'Khasra Number (खसरा) *' : 'खसरा क्रमांक *'}</span>
+                        <Check className="w-3.5 h-3.5 text-emerald-700" />
+                        <span>{language === 'en' ? 'Confirm Password *' : 'पासवर्ड की पुष्टि करें *'}</span>
                       </label>
                       <input
-                        type="text"
+                        type={showSignupPassword ? 'text' : 'password'}
                         required
-                        placeholder="उदा. 142/1 अथवा 205/3"
-                        value={signupKhasra}
-                        onChange={(e) => setSignupKhasra(e.target.value)}
-                        className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:border-emerald-600 focus:outline-none"
-                      />
-                    </div>
-
-                    {/* Land Area in Acres */}
-                    <div className="sm:col-span-2">
-                      <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5 mb-1">
-                        <Layers className="w-3.5 h-3.5 text-indigo-600" />
-                        <span>{language === 'en' ? 'Land Area (in Acres / एकड़) *' : 'कुल भू-रकबा (एकड़ में) *'}</span>
-                      </label>
-                      <input
-                        type="number"
-                        step="0.05"
-                        required
-                        placeholder="उदा. 4.00"
-                        value={signupAreaAcres}
-                        onChange={(e) => setSignupAreaAcres(e.target.value)}
-                        className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:border-emerald-600 focus:outline-none"
+                        minLength={6}
+                        placeholder="पासवर्ड पुनः दर्ज करें"
+                        value={signupConfirmPassword}
+                        onChange={(e) => setSignupConfirmPassword(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:border-emerald-600 focus:outline-none"
                       />
                     </div>
                   </div>
 
                   {/* DPDP Consent */}
-                  <label className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer text-xs text-slate-700">
+                  <label className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer text-xs text-slate-700 select-none">
                     <input
                       type="checkbox"
                       checked={signupConsent}
                       onChange={(e) => setSignupConsent(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
+                      className="mt-0.5 w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                     />
                     <span>
                       {language === 'en'
@@ -544,7 +735,7 @@ export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVeri
 
                   <button
                     type="submit"
-                    disabled={loading || signupPhone.length !== 10 || !signupConsent}
+                    disabled={loading || signupPhone.length !== 10 || !signupConsent || !signupPassword}
                     className="w-full py-3.5 px-4 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-sm flex items-center justify-center gap-2 min-h-[48px] disabled:opacity-50 cursor-pointer shadow-sm"
                   >
                     <span>{loading ? t('app.loading') : (language === 'chh' ? 'ओटीपी सत्यापन कोड मंगाव' : language === 'hi' ? 'ओटीपी सत्यापन कोड मंगाएं' : 'Verify via OTP')}</span>
@@ -556,6 +747,7 @@ export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVeri
                   <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1">
                     <div className="font-bold text-slate-800">{signupName} ({signupPhone})</div>
                     <div className="text-slate-500">{signupDistrict} • खसरा: {signupKhasra} • {signupAreaAcres} एकड़</div>
+                    <div className="text-[11px] text-emerald-700 font-bold">✓ पासवर्ड सेट किया गया (Argon2 Hashed)</div>
                   </div>
 
                   <div>
@@ -572,6 +764,9 @@ export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVeri
                       onChange={(e) => setSignupOtp(e.target.value)}
                       className="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 text-center text-lg font-mono font-bold tracking-widest focus:border-emerald-600 focus:outline-none"
                     />
+                    <div className="text-[11px] text-slate-500 mt-1">
+                      <em>{language === 'en' ? 'Demo OTP — live SMS gateway enabled upon TRAI DLT registration' : 'डेमो ओटीपी — ट्राई (TRAI) डीएलटी पंजीयन उपरांत लाइव एसएमएस गेटवे सक्रिय'}</em>
+                    </div>
                   </div>
 
                   <button
@@ -586,26 +781,26 @@ export const FarmerLookupGate: React.FC<FarmerLookupGateProps> = ({ onFarmerVeri
                   <button
                     type="button"
                     onClick={() => setSignupStep('details')}
-                    className="w-full text-xs text-slate-500 font-bold hover:underline text-center"
+                    className="w-full text-xs text-slate-500 font-bold hover:underline text-center cursor-pointer"
                   >
                     ← {language === 'en' ? 'Edit Details' : 'विवरण सुधारें'}
                   </button>
                 </form>
               )}
 
-              {/* Back to Lookup */}
+              {/* Back to Sign-In */}
               <div className="pt-3 text-center border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => {
                     setError(null);
-                    setAuthMode('lookup');
+                    setAuthMode('signin');
                     setSignupStep('details');
                   }}
                   className="font-bold text-emerald-700 hover:underline text-xs inline-flex items-center gap-1 cursor-pointer"
                 >
                   <LogIn className="w-3.5 h-3.5" />
-                  <span>{language === 'chh' ? 'खसरा खोज म वापस जावव' : language === 'hi' ? 'खसरा खोज पर वापस जाएं' : 'Back to Khasra Lookup'}</span>
+                  <span>{language === 'chh' ? 'लॉगिन म वापस जावव' : language === 'hi' ? 'साइन इन पर वापस जाएं' : 'Back to Sign-In'}</span>
                 </button>
               </div>
             </div>

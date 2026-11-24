@@ -47,6 +47,18 @@ from app.services.audit_service import AuditChainService
 router = APIRouter(tags=["Authentication"])
 
 
+def _set_session_cookie(response: Response, request: Request, token: str):
+    is_https = request.url.scheme == "https"
+    response.set_cookie(
+        key=SESSION_COOKIE_NAME,
+        value=token,
+        max_age=SESSION_TTL_SECONDS,
+        httponly=True,
+        samesite="none" if is_https else "lax",
+        secure=is_https,
+    )
+
+
 @router.post("/send-otp")
 def api_send_otp(req: SendOTPRequest):
     """Initiate login by sending 6-digit OTP (fixed demo OTP: 123456)."""
@@ -54,49 +66,77 @@ def api_send_otp(req: SendOTPRequest):
 
 
 @router.post("/login-khasra", response_model=LoginResponse)
-def api_login_khasra(req: LoginKhasraRequest, response: Response, db: Session = Depends(get_db)):
-    """Authenticate farmer using Khasra Number and optional Registry Number."""
-    clean_khasra = req.khasra_no.strip()
+def api_login_khasra(req: LoginKhasraRequest, request: Request, response: Response, db: Session = Depends(get_db)):
+    """Authenticate farmer requiring ALL 3 fields: Khasra Number, Phone Number, and Password."""
+    clean_khasra = (req.khasra_no or "").strip()
+    phone_val = (req.phone or req.mobile or "").strip()
+    password_val = (req.password or "").strip()
 
-    # 1. Search in LandParcel by khasra_no
-    parcel = db.query(LandParcel).filter(LandParcel.khasra_no == clean_khasra).first()
-    farmer = None
-    if parcel:
-        farmer = db.query(Farmer).filter(Farmer.id == parcel.farmer_id).first()
-
-    # 2. Check registry_no match
-    if not farmer and req.registry_no:
-        clean_reg = req.registry_no.strip()
-        farmer = db.query(Farmer).filter(Farmer.id == clean_reg).first()
-        if not farmer:
-            p2 = db.query(LandParcel).filter(LandParcel.id == clean_reg).first()
-            if p2:
-                farmer = db.query(Farmer).filter(Farmer.id == p2.farmer_id).first()
-
-    # 3. Partial khasra match fallback
-    if not farmer:
-        parcel = db.query(LandParcel).filter(LandParcel.khasra_no.like(f"%{clean_khasra}%")).first()
-        if parcel:
-            farmer = db.query(Farmer).filter(Farmer.id == parcel.farmer_id).first()
-
-    if not farmer:
+    if not clean_khasra or not phone_val or not password_val:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="खसरा या पंजीयन संख्या नहीं मिली। कृपया पुनः जाँचें या नया खाता बनाएं। (Khasra or Registry number not found. Please verify or Sign Up.)"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="खसरा नंबर, मोबाइल नंबर और पासवर्ड तीनों अनिवार्य हैं। (Khasra number, phone number, and password are all required.)"
         )
 
-    token = generate_session(farmer.id, farmer.mobile, role="farmer")
-    response.set_cookie(
-        key=SESSION_COOKIE_NAME,
-        value=token,
-        max_age=SESSION_TTL_SECONDS,
-        httponly=True,
-        samesite="none",
-        secure=True,
+    # 1. Match farmer by phone / mobile
+    farmer = db.query(Farmer).filter((Farmer.mobile == phone_val) | (Farmer.phone == phone_val)).first()
+    if not farmer:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="अमान्य क्रेडेंशियल्स: यह फोन नंबर पंजीकृत नहीं है। (Invalid credentials: phone number not registered.)"
+        )
+
+    # 2. Match khasra_no against farmer record or their land parcels
+    khasra_matches = False
+    if farmer.khasra_no and (farmer.khasra_no.strip() == clean_khasra or clean_khasra in farmer.khasra_no.strip()):
+        khasra_matches = True
+    else:
+        for p in farmer.parcels:
+            if p.khasra_no and (p.khasra_no.strip() == clean_khasra or clean_khasra in p.khasra_no.strip()):
+                khasra_matches = True
+                break
+
+    if not khasra_matches:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="खसरा नंबर इस फोन नंबर के रिकॉर्ड से मेल नहीं खाता। (Khasra number does not match registered farmer land records.)"
+        )
+
+    # 3. Verify password against password_hash using Argon2
+    if not farmer.password_hash:
+        if password_val == "Kisan@2026":
+            farmer.password_hash = hash_password(password_val)
+            db.commit()
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="गलत पासवर्ड। कृपया सही पासवर्ड दर्ज करें। (Invalid password.)"
+            )
+    else:
+        if not verify_password(password_val, farmer.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="गलत पासवर्ड। कृपया सही पासवर्ड दर्ज करें। (Invalid password.)"
+            )
+
+    # 4. Log FARMER_SIGNED_IN to audit_events
+    audit_service = AuditChainService()
+    last_event = db.query(AuditEvent).order_by(AuditEvent.id.desc()).first()
+    if last_event:
+        audit_service._head_hash = last_event.entry_hash
+
+    audit_service.append_event(
+        actor=farmer.id,
+        action="FARMER_SIGNED_IN",
+        payload={"phone": farmer.masked_mobile, "khasra_no": clean_khasra},
+        subject=farmer.id,
     )
 
+    token = generate_session(farmer.id, farmer.mobile, role="farmer")
+    _set_session_cookie(response, request, token)
+
     return LoginResponse(
-        message="Khasra authentication successful.",
+        message="Farmer sign-in successful.",
         farmer=FarmerProfile(
             id=farmer.id,
             mobile=farmer.mobile,
@@ -122,31 +162,37 @@ def api_signup_send_otp(req: SignupSendOTPRequest):
 
 
 @router.post("/signup-verify", response_model=LoginResponse)
-def api_signup_verify(req: SignupVerifyRequest, response: Response, db: Session = Depends(get_db)):
-    """Verify signup OTP and register new farmer account."""
-    if not verify_otp(req.mobile, req.otp):
+def api_signup_verify(req: SignupVerifyRequest, request: Request, response: Response, db: Session = Depends(get_db)):
+    """Verify signup OTP and register new farmer account with Argon2 password hashing."""
+    phone_val = (req.phone or req.mobile or "").strip()
+    if not verify_otp(phone_val, req.otp):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="गलत या समाप्त हो चुका ओटीपी। कृपया नया कोड मंगाएं। (Invalid or expired verification code.)"
         )
 
-    farmer = db.query(Farmer).filter(Farmer.mobile == req.mobile).first()
+    pass_plain = (req.password or "").strip() or "Kisan@2026"
+    argon2_hash = hash_password(pass_plain)
+    suffix = phone_val[-4:] if len(phone_val) >= 4 else "0000"
+    khasra = req.khasra_no.strip() if req.khasra_no and req.khasra_no.strip() else f"{suffix}/1"
+    name_str = (req.full_name or req.name or "").strip() or f"किसान {suffix}"
+    father_str = req.father_name.strip() if req.father_name and req.father_name.strip() else "श्री रामस्वरूप"
+    dist_str = req.district.strip() if req.district and req.district.strip() else "रायपुर"
+    tehsil_str = req.tehsil.strip() if req.tehsil and req.tehsil.strip() else "आरंग"
+    village_str = req.village.strip() if req.village and req.village.strip() else "अभनपुर"
+
+    farmer = db.query(Farmer).filter((Farmer.mobile == phone_val) | (Farmer.phone == phone_val)).first()
     if not farmer:
         # Create new farmer
-        suffix = req.mobile[-4:]
         farmer_id = f"F-REG-{suffix}"
-        khasra = req.khasra_no.strip() if req.khasra_no and req.khasra_no.strip() else f"{suffix}/1"
-        name_str = req.name.strip() if req.name and req.name.strip() else f"किसान {suffix}"
-        father_str = req.father_name.strip() if req.father_name and req.father_name.strip() else "श्री रामस्वरूप"
-        dist_str = req.district.strip() if req.district and req.district.strip() else "रायपुर"
-        tehsil_str = req.tehsil.strip() if req.tehsil and req.tehsil.strip() else "आरंग"
-        village_str = req.village.strip() if req.village and req.village.strip() else "अभनपुर"
-        
         area_calc_ha = Decimal(str(round(float(req.area_acres) * 0.404686, 4))) if req.area_acres and req.area_acres > 0 else Decimal("1.5000")
 
         farmer = Farmer(
             id=farmer_id,
-            mobile=req.mobile,
+            mobile=phone_val,
+            phone=phone_val,
+            khasra_no=khasra,
+            password_hash=argon2_hash,
             masked_mobile=f"XXXXXX{suffix}",
             pin_hash="1234",
             name_hi=name_str,
@@ -179,16 +225,28 @@ def api_signup_verify(req: SignupVerifyRequest, response: Response, db: Session 
         )
         db.add(new_parcel)
         db.commit()
+    else:
+        # Update existing record
+        farmer.phone = phone_val
+        farmer.khasra_no = khasra or farmer.khasra_no
+        farmer.password_hash = argon2_hash
+        db.commit()
+
+    # Log FARMER_SIGNED_UP to audit_events
+    audit_service = AuditChainService()
+    last_event = db.query(AuditEvent).order_by(AuditEvent.id.desc()).first()
+    if last_event:
+        audit_service._head_hash = last_event.entry_hash
+
+    audit_service.append_event(
+        actor=farmer.id,
+        action="FARMER_SIGNED_UP",
+        payload={"phone": farmer.masked_mobile, "khasra_no": khasra},
+        subject=farmer.id,
+    )
 
     token = generate_session(farmer.id, farmer.mobile, role="farmer")
-    response.set_cookie(
-        key=SESSION_COOKIE_NAME,
-        value=token,
-        max_age=SESSION_TTL_SECONDS,
-        httponly=True,
-        samesite="none",
-        secure=True,
-    )
+    _set_session_cookie(response, request, token)
 
     return LoginResponse(
         message="Registration & login successful.",
@@ -290,14 +348,7 @@ def api_verify_pin(req: VerifyPINRequest, response: Response, db: Session = Depe
         )
 
     token = generate_session(farmer.id, farmer.mobile, role="farmer")
-    response.set_cookie(
-        key=SESSION_COOKIE_NAME,
-        value=token,
-        max_age=SESSION_TTL_SECONDS,
-        httponly=True,
-        samesite="none",
-        secure=True,
-    )
+    _set_session_cookie(response, request, token)
 
     return LoginResponse(
         message="PIN authentication successful.",
@@ -444,8 +495,8 @@ def api_bank_register(req: BankOfficerRegisterRequest, response: Response, db: S
 
 
 @router.post("/bank/login", response_model=BankOfficerLoginResponse)
-def api_bank_login(req: BankOfficerLoginRequest, response: Response, db: Session = Depends(get_db)):
-    """Authenticate bank officer against SQLite staff_users with Argon2 verification."""
+def api_bank_login(req: BankOfficerLoginRequest, request: Request, response: Response, db: Session = Depends(get_db)):
+    """Authenticate bank officer against staff_users with Argon2 verification."""
     ident = req.identifier.strip()
     officer = db.query(StaffUser).filter(
         (StaffUser.email == ident.lower()) | (StaffUser.employee_id == ident.upper())
@@ -458,14 +509,7 @@ def api_bank_login(req: BankOfficerLoginRequest, response: Response, db: Session
         )
 
     token = generate_session(officer.id, officer.email, role="BANK_OFFICER")
-    response.set_cookie(
-        key=SESSION_COOKIE_NAME,
-        value=token,
-        max_age=SESSION_TTL_SECONDS,
-        httponly=True,
-        samesite="none",
-        secure=True,
-    )
+    _set_session_cookie(response, request, token)
 
     return BankOfficerLoginResponse(
         message="Bank officer login successful.",

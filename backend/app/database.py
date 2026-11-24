@@ -6,7 +6,7 @@ import os
 import sqlite3
 from pathlib import Path
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import declarative_base, sessionmaker, DeclarativeBase
 from sqlalchemy.engine import Engine
 
@@ -98,12 +98,39 @@ def init_db():
     # Base.metadata.create_all works across both SQLite and PostgreSQL (Supabase)
     Base.metadata.create_all(bind=engine)
     
+    # PostgreSQL column migrations on existing tables
+    if IS_POSTGRES:
+        pg_migrations = [
+            "ALTER TABLE farmers ADD COLUMN IF NOT EXISTS phone VARCHAR(15)",
+            "ALTER TABLE farmers ADD COLUMN IF NOT EXISTS khasra_no VARCHAR(50)",
+            "ALTER TABLE farmers ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255)",
+            "ALTER TABLE bank_applications ADD COLUMN IF NOT EXISTS farmer_id VARCHAR(50)",
+            "ALTER TABLE bank_applications ADD COLUMN IF NOT EXISTS audit_hash VARCHAR(64)",
+            "ALTER TABLE bank_applications ADD COLUMN IF NOT EXISTS officer_id VARCHAR(50)",
+            "ALTER TABLE bank_applications ADD COLUMN IF NOT EXISTS officer_notes TEXT",
+            "ALTER TABLE bank_applications ADD COLUMN IF NOT EXISTS decided_at TIMESTAMP",
+            "ALTER TABLE rejections ADD COLUMN IF NOT EXISTS audit_hash VARCHAR(64)",
+        ]
+        try:
+            with engine.connect() as conn:
+                for sql in pg_migrations:
+                    try:
+                        conn.execute(text(sql))
+                        conn.commit()
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+
     # SQLite-specific column additions if migrating an older local SQLite file
     if IS_SQLITE:
         try:
             conn = sqlite3.connect(str(DB_PATH), timeout=10)
             cursor = conn.cursor()
             migrations = [
+                "ALTER TABLE farmers ADD COLUMN phone VARCHAR(15)",
+                "ALTER TABLE farmers ADD COLUMN khasra_no VARCHAR(50)",
+                "ALTER TABLE farmers ADD COLUMN password_hash VARCHAR(255)",
                 "ALTER TABLE bank_applications ADD COLUMN farmer_id VARCHAR(50)",
                 "ALTER TABLE bank_applications ADD COLUMN audit_hash VARCHAR(64)",
                 "ALTER TABLE bank_applications ADD COLUMN officer_id VARCHAR(50)",

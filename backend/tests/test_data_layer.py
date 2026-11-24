@@ -25,8 +25,13 @@ def adapter(db):
     return SyntheticAdapter(db)
 
 
+from app.database import IS_SQLITE
+
+
 # 1. SQLite Pragmas: WAL mode and Foreign Keys
 def test_sqlite_pragmas(db):
+    if not IS_SQLITE:
+        pytest.skip("SQLite pragma check only applies to SQLite databases.")
     journal_mode = db.execute(text("PRAGMA journal_mode;")).scalar()
     assert str(journal_mode).lower() == "wal"
 

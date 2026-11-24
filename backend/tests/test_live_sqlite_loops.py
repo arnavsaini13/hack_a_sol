@@ -17,8 +17,8 @@ def client():
 
 
 def test_loop_1_scheme_application_and_discrepancy(client):
-    # 1. Login as demo farmer (Ramesh Patel F-001) via Khasra
-    khasra_res = client.post("/api/v1/auth/login-khasra", json={"khasra_no": "142/1"})
+    # 1. Login as demo farmer (Ramesh Patel F-001) via Khasra + Phone + Password
+    khasra_res = client.post("/api/v1/auth/login-khasra", json={"khasra_no": "142/1", "phone": "9876543210", "password": "Kisan@2026"})
     assert khasra_res.status_code == 200
 
     # 2. Apply for an eligible scheme in Scheme Eligibility tab
@@ -115,7 +115,7 @@ def test_section_a_resolve_and_move_to_section_b(client):
         db.close()
 
     # 1. Login as demo farmer (Ramesh Patel F-001)
-    client.post("/api/v1/auth/login-khasra", json={"khasra_no": "142/1"})
+    client.post("/api/v1/auth/login-khasra", json={"khasra_no": "142/1", "phone": "9876543210", "password": "Kisan@2026"})
 
     # 2. Apply for two schemes
     apply_res1 = client.post(
@@ -232,7 +232,7 @@ def test_loop_2_bank_officer_decisions_to_farmer_loans(client):
     assert reject_res.json()["status"] in ("REJECT", "REJECTED")
 
     # 4. Now Farmer logs in
-    farmer_login = client.post("/api/v1/auth/login-khasra", json={"khasra_no": "142/1"})
+    farmer_login = client.post("/api/v1/auth/login-khasra", json={"khasra_no": "142/1", "phone": "9876543210", "password": "Kisan@2026"})
     assert farmer_login.status_code == 200
 
     # 5. Farmer views 'My Loans & Applications'

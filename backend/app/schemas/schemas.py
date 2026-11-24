@@ -21,6 +21,9 @@ class VerifyOTPRequest(BaseModel):
 
 class LoginKhasraRequest(BaseModel):
     khasra_no: str
+    phone: Optional[str] = None
+    mobile: Optional[str] = None
+    password: Optional[str] = None
     registry_no: Optional[str] = None
 
 
@@ -29,10 +32,13 @@ class SignupSendOTPRequest(BaseModel):
 
 
 class SignupVerifyRequest(BaseModel):
-    mobile: str = Field(..., pattern=r"^[6-9]\d{9}$")
+    mobile: Optional[str] = None
+    phone: Optional[str] = None
     otp: str = Field(..., min_length=6, max_length=6)
     khasra_no: Optional[str] = None
+    password: Optional[str] = None
     name: Optional[str] = None
+    full_name: Optional[str] = None
     father_name: Optional[str] = None
     district: Optional[str] = None
     tehsil: Optional[str] = None

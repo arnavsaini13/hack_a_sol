@@ -88,11 +88,16 @@ def seed_database(db: Session) -> None:
     # ─────────────────────────────────────────────────────────────────
     # 1. 5 Golden Personas + 1 Red Case Owner + 50 Diverse Farmers
     # ─────────────────────────────────────────────────────────────────
+    farmer_demo_pass_hash = hash_password("Kisan@2026")
+
     core_farmers = [
         # F-001: Golden Clean Case (Ramesh Patel)
         Farmer(
             id="F-001",
             mobile="9876543210",
+            phone="9876543210",
+            khasra_no="142/1",
+            password_hash=farmer_demo_pass_hash,
             masked_mobile="XXXXXX3210",
             pin_hash="1234",
             name_hi="रामेश्वर पटेल",
@@ -109,6 +114,9 @@ def seed_database(db: Session) -> None:
         Farmer(
             id="F-002",
             mobile="9876543211",
+            phone="9876543211",
+            khasra_no="88/2",
+            password_hash=farmer_demo_pass_hash,
             masked_mobile="XXXXXX3211",
             pin_hash="1234",
             name_hi="श्याम वर्मा",
@@ -125,6 +133,9 @@ def seed_database(db: Session) -> None:
         Farmer(
             id="F-003",
             mobile="9876543212",
+            phone="9876543212",
+            khasra_no="504",
+            password_hash=farmer_demo_pass_hash,
             masked_mobile="XXXXXX3212",
             pin_hash="1234",
             name_hi="अनिता बाई",
@@ -141,6 +152,9 @@ def seed_database(db: Session) -> None:
         Farmer(
             id="F-004",
             mobile="9876543213",
+            phone="9876543213",
+            khasra_no="45/2",
+            password_hash=farmer_demo_pass_hash,
             masked_mobile="XXXXXX3213",
             pin_hash="1234",
             name_hi="विक्रम सिंह",
@@ -157,6 +171,9 @@ def seed_database(db: Session) -> None:
         Farmer(
             id="F-005",
             mobile="9876543214",
+            phone="9876543214",
+            khasra_no="77/1",
+            password_hash=farmer_demo_pass_hash,
             masked_mobile="XXXXXX3214",
             pin_hash="1234",
             name_hi="दिलीप कुमार",
@@ -173,6 +190,9 @@ def seed_database(db: Session) -> None:
         Farmer(
             id="F-RED-01",
             mobile="9876543299",
+            phone="9876543299",
+            khasra_no="1087/2",
+            password_hash=farmer_demo_pass_hash,
             masked_mobile="XXXXXX3299",
             pin_hash="1234",
             name_hi="रमेश साहू",
@@ -277,6 +297,9 @@ def seed_database(db: Session) -> None:
             Farmer(
                 id=f"F-{idx:03d}",
                 mobile=mobile_num,
+                phone=mobile_num,
+                khasra_no=f"{100 + idx}/1",
+                password_hash=farmer_demo_pass_hash,
                 masked_mobile=f"XXXXX{mobile_num[-5:]}",
                 pin_hash="1234",
                 name_hi=n_hi,

@@ -18,8 +18,11 @@ class Farmer(Base):
 
     id: Mapped[str] = mapped_column(String(50), primary_key=True)
     mobile: Mapped[str] = mapped_column(String(15), unique=True, index=True)
+    phone: Mapped[Optional[str]] = mapped_column(String(15), nullable=True, index=True)
     masked_mobile: Mapped[str] = mapped_column(String(15))
     pin_hash: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    khasra_no: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    password_hash: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
     name_hi: Mapped[str] = mapped_column(String(100))
     name_en: Mapped[str] = mapped_column(String(100))

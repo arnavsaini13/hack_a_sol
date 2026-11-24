@@ -37,6 +37,27 @@ def _ensure_initial_seed():
             print("[INFO] Database is empty. Seeding initial records...")
             seed_database(db)
             print("[INFO] Seeding completed.")
+        else:
+            # Upgrade existing records if phone/khasra_no/password_hash is null
+            from app.auth import hash_password
+            default_hash = hash_password("Kisan@2026")
+            golden_map = {
+                "F-001": ("9876543210", "142/1"),
+                "F-002": ("9876543211", "88/2"),
+                "F-003": ("9876543212", "504"),
+                "F-004": ("9876543213", "45/2"),
+                "F-005": ("9876543214", "77/1"),
+            }
+            updated = False
+            for fid, (ph, kh) in golden_map.items():
+                f_rec = db.query(Farmer).filter(Farmer.id == fid).first()
+                if f_rec and (not f_rec.password_hash or not f_rec.phone or not f_rec.khasra_no):
+                    f_rec.phone = ph
+                    f_rec.khasra_no = kh
+                    f_rec.password_hash = default_hash
+                    updated = True
+            if updated:
+                db.commit()
     except Exception as e:
         print(f"[WARN] Initial seed check bypassed: {e}")
     finally:

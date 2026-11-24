@@ -5,8 +5,8 @@ from app.main import app
 client = TestClient(app)
 
 def test_khasra_login():
-    # Login with Khasra 142/1 (Ramesh Patel)
-    res = client.post("/api/auth/login-khasra", json={"khasra_no": "142/1", "registry_no": "F-001"})
+    # Login with Khasra 142/1 + Phone + Password (Ramesh Patel)
+    res = client.post("/api/auth/login-khasra", json={"khasra_no": "142/1", "phone": "9876543210", "password": "Kisan@2026"})
     assert res.status_code == 200, res.text
     data = res.json()
     assert data["farmer"]["id"] == "F-001"
@@ -70,12 +70,12 @@ def test_explain_rejection_all_crops_and_custom_other():
 
 def test_scheme_evaluation_v1_and_interactive_qa():
     # Login as Ramesh Patel
-    login_res = client.post("/api/auth/login-khasra", json={"khasra_no": "142/1", "registry_no": "F-001"})
+    login_res = client.post("/api/auth/login-khasra", json={"khasra_no": "142/1", "phone": "9876543210", "password": "Kisan@2026"})
     assert login_res.status_code == 200
     token = login_res.json()["session_token"]
 
     # 1. Evaluate schemes without extra answers -> All 5 schemes evaluated
-    eval_res1 = client.post("/api/v1/farmer/schemes/evaluate", json={"answers": {}}, cookies={"agri_session": token})
+    eval_res1 = client.post("/api/v1/farmer/schemes/evaluate", json={"answers": {}}, cookies={"agri_session_token": token})
     assert eval_res1.status_code == 200, eval_res1.text
     data1 = eval_res1.json()
     assert data1["total_evaluated"] == 5
@@ -85,7 +85,7 @@ def test_scheme_evaluation_v1_and_interactive_qa():
     eval_res2 = client.post(
         "/api/v1/farmer/schemes/evaluate",
         json={"answers": {"kcc_repaid_within_12m": False}},
-        cookies={"agri_session": token}
+        cookies={"agri_session_token": token}
     )
     assert eval_res2.status_code == 200
     data2 = eval_res2.json()
@@ -130,4 +130,60 @@ def test_interactive_calculators_pure_python():
     assert paddy_data["composite_rate_paise"] == 310000  # ₹3,100/qtl
     assert paddy_data["moisture_status"] == "ALERT"
     assert paddy_data["moisture_deduction_paise"] > 0
+
+
+def test_signup_argon2_password_and_signin_three_fields():
+    # 1. Sign up new farmer with Argon2 password
+    test_phone = "9811223344"
+    test_khasra = "333/1"
+    test_password = "SecretFarmer@2026"
+
+    # Send OTP
+    send_res = client.post("/api/auth/signup-send-otp", json={"mobile": test_phone})
+    assert send_res.status_code == 200
+
+    # Verify OTP & Register with password
+    signup_res = client.post(
+        "/api/auth/signup-verify",
+        json={
+            "phone": test_phone,
+            "otp": "123456",
+            "khasra_no": test_khasra,
+            "password": test_password,
+            "full_name": "Rohan Patel",
+        }
+    )
+    assert signup_res.status_code == 200, signup_res.text
+    assert signup_res.json()["farmer"]["id"].startswith("F-REG-")
+
+    # 2. Test Sign-in with wrong password -> 401
+    bad_pass_res = client.post(
+        "/api/auth/login-khasra",
+        json={"khasra_no": test_khasra, "phone": test_phone, "password": "WrongPassword"}
+    )
+    assert bad_pass_res.status_code == 401
+
+    # 3. Test Sign-in with wrong khasra -> 401
+    bad_khasra_res = client.post(
+        "/api/auth/login-khasra",
+        json={"khasra_no": "999/9", "phone": test_phone, "password": test_password}
+    )
+    assert bad_khasra_res.status_code == 401
+
+    # 4. Test Sign-in with missing field -> 401
+    missing_res = client.post(
+        "/api/auth/login-khasra",
+        json={"khasra_no": test_khasra, "phone": test_phone}
+    )
+    assert missing_res.status_code == 401
+
+    # 5. Test Sign-in with matching Khasra + Phone + Password -> 200 Success
+    success_res = client.post(
+        "/api/auth/login-khasra",
+        json={"khasra_no": test_khasra, "phone": test_phone, "password": test_password}
+    )
+    assert success_res.status_code == 200
+    assert success_res.json()["farmer"]["mobile"] == test_phone
+    assert "session_token" in success_res.json()
+
 

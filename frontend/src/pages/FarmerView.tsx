@@ -28,6 +28,7 @@ import { EntitlementCalculatorsTab } from '../components/farmer/EntitlementCalcu
 import { SchemesEligibilityTab } from '../components/farmer/SchemesEligibilityTab';
 import { GapsAndCasesTab } from '../components/farmer/GapsAndCasesTab';
 import { MyLoans } from '../components/farmer/MyLoans';
+import { FarmerProfileTab } from '../components/farmer/FarmerProfileTab';
 import { LetterModal } from '../components/farmer/LetterModal';
 import { RejectionExplainerModal } from '../components/farmer/RejectionExplainerModal';
 import { ChatWidget } from '../components/chat/ChatWidget';
@@ -40,8 +41,8 @@ export const FarmerView: React.FC = () => {
   const [snapshot, setSnapshot] = useState<FarmerSnapshot | null>(null);
   const [cases, setCases] = useState<CaseItem[]>([]);
 
-  // 4 Clean Tabs
-  const [activeTab, setActiveTab] = useState<'calculators' | 'schemes' | 'cases' | 'loans'>('calculators');
+  // Clean Tabs + Dedicated Profile View
+  const [activeTab, setActiveTab] = useState<'calculators' | 'schemes' | 'cases' | 'loans' | 'profile'>('calculators');
 
   // PageContext for AI Co-Pilot
   const { setPageInfo, pendingFields, setActiveFarmerId } = usePageContext();
@@ -63,7 +64,7 @@ export const FarmerView: React.FC = () => {
   // Handle Co-Pilot pendingFields UI navigation
   useEffect(() => {
     if (pendingFields) {
-      if (pendingFields.tab && ['calculators', 'schemes', 'cases', 'loans'].includes(pendingFields.tab)) {
+      if (pendingFields.tab && ['calculators', 'schemes', 'cases', 'loans', 'profile'].includes(pendingFields.tab)) {
         setActiveTab(pendingFields.tab as any);
       } else if (pendingFields.amount !== undefined || pendingFields.tenure_months !== undefined) {
         setActiveTab('calculators');
@@ -203,11 +204,13 @@ export const FarmerView: React.FC = () => {
         </div>
       )}
 
-      {/* Verified Compact Farmer Header with "Change Farmer" Button */}
+      {/* Verified Compact Farmer Header with "Change Farmer" Button and "My Profile" Button */}
       <FarmerProfileHeader
         farmer={farmer}
         parcels={snapshot?.parcels || []}
         onLogout={handleLogout}
+        onOpenProfile={() => setActiveTab('profile')}
+        isProfileActive={activeTab === 'profile'}
       />
 
       {/* Hero Banner with Jai Jawan Jai Kisan */}
@@ -328,6 +331,17 @@ export const FarmerView: React.FC = () => {
           farmer={farmer}
           onExplainRejection={() => setIsRejectionModalOpen(true)}
           onNavigateToCases={() => setActiveTab('cases')}
+        />
+      )}
+
+      {/* ───────────────────────────────────────────────────────────── */}
+      {/* TAB 5: FARMER PROFILE & SCHEME ELIGIBILITY ATTRIBUTES        */}
+      {/* ───────────────────────────────────────────────────────────── */}
+      {activeTab === 'profile' && (
+        <FarmerProfileTab
+          farmer={farmer}
+          snapshot={snapshot}
+          onNavigateToSchemes={() => setActiveTab('schemes')}
         />
       )}
 

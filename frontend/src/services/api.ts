@@ -108,7 +108,18 @@ export async function signupSendOtp(mobile: string) {
   });
 }
 
-export async function signupVerifyOtp(params: { mobile: string; otp: string; khasra_no?: string; name?: string }) {
+export async function signupVerifyOtp(params: {
+  mobile: string;
+  otp: string;
+  khasra_no?: string;
+  name?: string;
+  father_name?: string;
+  district?: string;
+  tehsil?: string;
+  village?: string;
+  aadhaar_last4?: string;
+  area_acres?: number;
+}) {
   const res = await apiFetch<{ message: string; farmer: any; session_token: string; role: string }>('/auth/signup-verify', {
     method: 'POST',
     body: JSON.stringify(params),

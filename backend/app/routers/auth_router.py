@@ -137,6 +137,12 @@ def api_signup_verify(req: SignupVerifyRequest, response: Response, db: Session 
         farmer_id = f"F-REG-{suffix}"
         khasra = req.khasra_no.strip() if req.khasra_no and req.khasra_no.strip() else f"{suffix}/1"
         name_str = req.name.strip() if req.name and req.name.strip() else f"किसान {suffix}"
+        father_str = req.father_name.strip() if req.father_name and req.father_name.strip() else "श्री रामस्वरूप"
+        dist_str = req.district.strip() if req.district and req.district.strip() else "रायपुर"
+        tehsil_str = req.tehsil.strip() if req.tehsil and req.tehsil.strip() else "आरंग"
+        village_str = req.village.strip() if req.village and req.village.strip() else "अभनपुर"
+        
+        area_calc_ha = Decimal(str(round(float(req.area_acres) * 0.404686, 4))) if req.area_acres and req.area_acres > 0 else Decimal("1.5000")
 
         farmer = Farmer(
             id=farmer_id,
@@ -144,12 +150,12 @@ def api_signup_verify(req: SignupVerifyRequest, response: Response, db: Session 
             masked_mobile=f"XXXXXX{suffix}",
             pin_hash="1234",
             name_hi=name_str,
-            name_en=f"Farmer {suffix}",
-            father_name_hi="स्व. श्री रामस्वरूप",
-            father_name_en="Shri Ram Swaroop",
-            village="अभनपुर",
-            tehsil="आरंग",
-            district="रायपुर",
+            name_en=name_str,
+            father_name_hi=father_str,
+            father_name_en=father_str,
+            village=village_str,
+            tehsil=tehsil_str,
+            district=dist_str,
             consent_given=True,
             consent_timestamp=datetime.now(timezone.utc),
         )
@@ -160,13 +166,13 @@ def api_signup_verify(req: SignupVerifyRequest, response: Response, db: Session 
         new_parcel = LandParcel(
             id=f"P-REG-{suffix}",
             farmer_id=farmer.id,
-            district="रायपुर",
-            tehsil="आरंग",
-            village="अभनपुर",
+            district=dist_str,
+            tehsil=tehsil_str,
+            village=village_str,
             khasra_no=khasra,
-            area_ha=Decimal("1.5000"),
+            area_ha=area_calc_ha,
             girdawari_crop="Paddy",
-            girdawari_ha=Decimal("1.5000"),
+            girdawari_ha=area_calc_ha,
             co_owners_json="[]",
             mortgage_status="NONE",
             mortgage_bank=None,

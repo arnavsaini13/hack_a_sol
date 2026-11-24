@@ -33,6 +33,12 @@ class SignupVerifyRequest(BaseModel):
     otp: str = Field(..., min_length=6, max_length=6)
     khasra_no: Optional[str] = None
     name: Optional[str] = None
+    father_name: Optional[str] = None
+    district: Optional[str] = None
+    tehsil: Optional[str] = None
+    village: Optional[str] = None
+    aadhaar_last4: Optional[str] = None
+    area_acres: Optional[float] = None
 
 
 class VerifyPINRequest(BaseModel):

@@ -142,17 +142,17 @@ def _build_dynamic_reply(
     if any(re.search(r"\b" + re.escape(g) + r"\b", msg) for g in ["hi", "hello", "hey", "namaste", "namaskar", "pranam", "नमस्ते", "नमस्कार", "राम राम", "जोहार"]):
         if is_chh:
             text = (
-                f"जय जोहार {name} जी! मैं बंदू (Bandu) हंव। आपके गाँव {village} ({district}) म {acres_val:.2f} एकड़ जमीन दर्ज हे। "
+                f"जय जोहार {name} जी! मैं बंधु (Bandhu) हंव। आपके गाँव {village} ({district}) म {acres_val:.2f} एकड़ जमीन दर्ज हे। "
                 f"बतावव आज का मदद कर सकथंव? केसीसी ऋण, धान बोनस (₹3,100), अथवा खाता जांच?"
             )
         elif is_hi:
             text = (
-                f"नमस्ते {name} जी! मैं बंदू (Bandu) हूँ। आपके गाँव {village} ({district}) में {acres_val:.2f} एकड़ भूमि पंजीकृत है। "
+                f"नमस्ते {name} जी! मैं बंधु (Bandhu) हूँ। आपके गाँव {village} ({district}) में {acres_val:.2f} एकड़ भूमि पंजीकृत है। "
                 f"आज मैं आपकी क्या सहायता कर सकता हूँ? आप केसीसी ऋण सीमा, धान बोनस (₹3,100), अथवा ई-केवाईसी स्थिति पूछ सकते हैं।"
             )
         else:
             text = (
-                f"Namaste {name}! I am Bandu, your JanAgri assistant. You have {acres_val:.2f} acres registered in {village}, {district}. "
+                f"Namaste {name}! I am Bandhu, your JanAgri assistant. You have {acres_val:.2f} acres registered in {village}, {district}. "
                 f"How can I assist you today? You can ask about your KCC loan limit, Paddy bonus (₹3,100/q), or check pending eKYC."
             )
         return {"text": text, "tool_data_sink": tool_data_sink, "ui_action": None}
@@ -161,17 +161,17 @@ def _build_dynamic_reply(
     if any(w in msg for w in ["who are you", "what can you do", "who created you", "help me", "तुम कौन हो", "का कर सकथस", "सहायता", "मदद", "क्या कर सकते", "तुम्हारा नाम", "your name"]):
         if is_chh:
             text = (
-                f"मैं बंदू (Bandu) हंव, छत्तीसगढ़ सरकार के जन-कृषि मंच के एआई साथी। "
+                f"मैं बंधु (Bandhu) हंव, छत्तीसगढ़ सरकार के जन-कृषि मंच के एआई साथी। "
                 f"मैं आपके खसरा के अनुसार सही केसीसी करजा (4% ब्याज), धान MSP (₹3,100 प्रति क्विंटल), फसल बीमा, और बैंक समस्या के समाधान म मदद करथंव।"
             )
         elif is_hi:
             text = (
-                f"मैं बंदू (Bandu) हूँ, जन-कृषि पोर्टल का आधिकारिक एआई साथी। "
+                f"मैं बंधु (Bandhu) हूँ, जन-कृषि पोर्टल का आधिकारिक एआई साथी। "
                 f"मैं आपकी पंजीकृत भूमि के आधार पर सही केसीसी ऋण पात्रता, धान MSP एवं कृषक उन्नति बोनस (₹3,100), फसल बीमा, तथा बैंक अस्वीकृति की जांच करता हूँ।"
             )
         else:
             text = (
-                f"I am Bandu, the official AI assistant for JanAgriPortal. "
+                f"I am Bandhu, the official AI assistant for JanAgriPortal. "
                 f"I compute your statutory KCC loan limits at 4% prompt interest, verify Paddy procurement at ₹3,100/quintal, track payment bottlenecks, and analyze scanned rejection letters."
             )
         return {"text": text, "tool_data_sink": tool_data_sink, "ui_action": None}
@@ -357,8 +357,8 @@ async def chat_copilot(
 
     # System instruction enforcing strict rules
     system_instruction = f"""
-You are Bandu, the Official AI Assistant for JanAgriPortal (Chhattisgarh Agricultural Platform).
-You serve farmers speaking Hindi, Chhattisgarhi, or English. You introduce yourself warmly as Bandu (or बंदू).
+You are Bandhu, the Official AI Assistant for JanAgriPortal (Chhattisgarh Agricultural Platform).
+You serve farmers speaking Hindi, Chhattisgarhi, or English. You introduce yourself warmly as Bandhu (or बंधु).
 
 CURRENT FARMER CONTEXT (Server verified, NON-PII):
 - Farmer ID: {farmer.id if farmer else 'F-001'}

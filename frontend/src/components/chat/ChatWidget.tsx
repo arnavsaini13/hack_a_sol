@@ -114,11 +114,11 @@ export const ChatWidget: React.FC = () => {
     if (messages.length === 0) {
       const isHi = language === 'hi' || language === 'chh';
       const welcomeDisplay = isHi
-        ? 'नमस्ते! मैं बंदू (Bandu) हूँ, आपका जन-कृषि साथी। आप मुझसे बोलकर या लिखकर केसीसी ऋण, धान बोनस (₹3,100), अथवा किसी भी योजना की जानकारी ले सकते हैं।'
-        : 'Namaste! I am Bandu, your JanAgri assistant. You can ask by voice or text about your KCC loan limit, Paddy bonus (₹3,100), or reject slips.';
+        ? 'नमस्ते! मैं बंधु (Bandhu) हूँ, आपका जन-कृषि साथी। आप मुझसे बोलकर या लिखकर केसीसी ऋण, धान बोनस (₹3,100), अथवा किसी भी योजना की जानकारी ले सकते हैं।'
+        : 'Namaste! I am Bandhu, your JanAgri assistant. You can ask by voice or text about your KCC loan limit, Paddy bonus (₹3,100), or reject slips.';
       const welcomeTts = isHi
-        ? 'नमस्ते! मैं बंदू हूँ, आपका जन-कृषि साथी। आप मुझसे बोलकर या लिखकर केसीसी ऋण, धान बोनस, अथवा किसी भी योजना की जानकारी ले सकते हैं।'
-        : 'Namaste! I am Bandu, your JanAgri assistant. You can ask by voice or text about your KCC loan limit, Paddy bonus, or reject slips.';
+        ? 'नमस्ते! मैं बंधु हूँ, आपका जन-कृषि साथी। आप मुझसे बोलकर या लिखकर केसीसी ऋण, धान बोनस, अथवा किसी भी योजना की जानकारी ले सकते हैं।'
+        : 'Namaste! I am Bandhu, your JanAgri assistant. You can ask by voice or text about your KCC loan limit, Paddy bonus, or reject slips.';
 
       setMessages([
         {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, MapPin, ShieldCheck, RefreshCw, Sprout, Layers } from 'lucide-react';
+import { User, MapPin, ShieldCheck, RefreshCw, Sprout, Layers, UserCheck } from 'lucide-react';
 import type { FarmerProfile, LandParcel } from '../../types/models';
 import { useTranslation } from '../../i18n';
 
@@ -7,12 +7,16 @@ interface FarmerProfileHeaderProps {
   farmer: FarmerProfile;
   parcels?: LandParcel[];
   onLogout: () => void;
+  onOpenProfile?: () => void;
+  isProfileActive?: boolean;
 }
 
 export const FarmerProfileHeader: React.FC<FarmerProfileHeaderProps> = ({
   farmer,
   parcels = [],
   onLogout,
+  onOpenProfile,
+  isProfileActive = false,
 }) => {
   const { language } = useTranslation();
 
@@ -73,15 +77,37 @@ export const FarmerProfileHeader: React.FC<FarmerProfileHeaderProps> = ({
         </div>
       </div>
 
-      {/* Change Farmer Action */}
-      <div className="self-end md:self-auto shrink-0">
+      {/* Profile & Change Farmer Actions */}
+      <div className="flex items-center gap-2 self-end md:self-auto shrink-0">
+        {onOpenProfile && (
+          <button
+            type="button"
+            onClick={onOpenProfile}
+            className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-xs min-h-[40px] cursor-pointer ${
+              isProfileActive
+                ? 'bg-emerald-700 text-white border border-emerald-800 shadow-sm'
+                : 'border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-900'
+            }`}
+            title={language === 'en' ? 'Farmer Profile & Eligibility' : 'किसान प्रोफाइल व योजना पात्रता'}
+          >
+            <UserCheck className="w-4 h-4 text-emerald-700 shrink-0" />
+            <span>
+              {language === 'chh'
+                ? 'मोर प्रोफाइल (Profile)'
+                : language === 'hi'
+                ? 'मेरी प्रोफाइल (Profile)'
+                : 'My Profile'}
+            </span>
+          </button>
+        )}
+
         <button
           type="button"
           onClick={onLogout}
-          className="px-3.5 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs min-h-[40px]"
+          className="px-3.5 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs min-h-[40px] cursor-pointer"
         >
           <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
-          <span>{language === 'chh' ? 'दूसर किसान चुनव' : language === 'hi' ? 'किसान बदलें' : 'Change Farmer'}</span>
+          <span>{language === 'chh' ? 'दूसर किसान' : language === 'hi' ? 'किसान बदलें' : 'Change Farmer'}</span>
         </button>
       </div>
     </div>
